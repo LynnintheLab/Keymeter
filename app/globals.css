@@ -1,0 +1,1032 @@
+* {
+  box-sizing: border-box;
+}
+:root {
+  --ink: #f5f5f5;
+  --primary: #fafafa;
+  --on-primary: #080808;
+  --primary-hover: #e5e5e5;
+  --deep: #111;
+  --signal: #ededed;
+  --muted: #a3a3a3;
+  --line: #282828;
+  --control-line: #646464;
+  --wash: #000;
+  --base: #0b0b0b;
+  --light: #c5c5c5;
+  --tick: #3d3d3d;
+  color-scheme: dark;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: var(--ink);
+  background: var(--wash);
+  font-synthesis: none;
+}
+body {
+  margin: 0;
+}
+::selection {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.wrap {
+  width: min(1080px, calc(100% - 72px));
+  margin-inline: auto;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+header {
+  background: var(--wash);
+  border-bottom: 1px solid var(--line);
+}
+header .bar {
+  height: 78px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.4rem;
+  font-weight: 740;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.provider,
+.smallCap,
+.stub,
+dd,
+.receiptHead strong,
+.gauge text {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.provider {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.provider i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.provider b,
+footer b {
+  color: var(--line);
+}
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+  column-gap: clamp(40px, 8vw, 124px);
+  align-items: center;
+  padding: 76px 0 40px;
+}
+.smallCap {
+  text-transform: uppercase;
+  font-size: 0.71rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+}
+h1,
+h2 {
+  margin: 0;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+h1 {
+  font-size: 3.95rem;
+  line-height: 1.02;
+  font-weight: 660;
+  margin: 18px 0;
+}
+h2 {
+  font-size: 1.65rem;
+  line-height: 1.16;
+  margin: 12px 0;
+}
+.intro {
+  font-size: 1.09rem;
+  line-height: 1.55;
+  max-width: 39ch;
+  color: var(--muted);
+  margin: 0;
+}
+form {
+  margin-top: 32px;
+  max-width: 455px;
+}
+label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 650;
+  margin-bottom: 9px;
+}
+.inputWrap,
+.submit {
+  border-radius: 9px;
+  height: 51px;
+  display: flex;
+  align-items: center;
+}
+.inputWrap {
+  border: 1px solid var(--control-line);
+  background: var(--base);
+  gap: 9px;
+  padding: 0 8px 0 12px;
+}
+.inputWrap:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.inputWrap svg {
+  width: 20px;
+  color: var(--muted);
+  flex: none;
+}
+input {
+  width: 100%;
+  min-width: 0;
+  outline: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+}
+input::placeholder {
+  color: var(--muted);
+}
+button {
+  cursor: pointer;
+  font: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.show {
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 10px;
+}
+.show:hover {
+  background: var(--deep);
+}
+.submit {
+  border: 0;
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: 0 18px;
+  width: 100%;
+  justify-content: space-between;
+  margin-top: 12px;
+  font-weight: 650;
+  transition: background 0.18s;
+}
+.submit span {
+  font-size: 1.35rem;
+}
+.submit:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+.privacy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 13px 0 0;
+  color: var(--muted);
+  font-size: 0.81rem;
+}
+.privacy svg {
+  width: 16px;
+  flex: none;
+}
+.error {
+  font-size: 0.87rem;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.receipt {
+  border-radius: 16px;
+  background: var(--deep);
+  color: white;
+  overflow: hidden;
+  box-shadow: 0 5px 14px rgb(0 0 0 / .24);
+}
+.receiptHead,
+.stub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.receiptHead {
+  padding: 21px 25px;
+  border-bottom: 1px solid var(--tick);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.receiptHead strong {
+  border: 1px solid var(--tick);
+  border-radius: 5px;
+  padding: 4px 7px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--light);
+}
+.receiptBody {
+  padding: 20px 28px 15px;
+}
+.emptyStatement {
+  min-height: 16rem;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  line-height: 1.5;
+  color: var(--light);
+}
+.gauge {
+  width: 190px;
+  max-width: 90%;
+  display: block;
+  margin: 0 auto;
+}
+.rim {
+  stroke: var(--tick);
+  fill: none;
+  stroke-width: 1;
+}
+.gauge text {
+  fill: white;
+  font-size: 24px;
+  font-weight: 600;
+}
+.gauge .tickLabel {
+  fill: var(--light);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+.balance {
+  text-align: center;
+  display: grid;
+  gap: 4px;
+  margin: 0 0 20px;
+}
+.balance span,
+dt {
+  font-size: 0.85rem;
+  color: var(--light);
+}
+.balance b {
+  font-size: 2.55rem;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+dl {
+  margin: 0;
+  border-top: 1px solid var(--tick);
+  padding-top: 12px;
+}
+dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 7px 0;
+}
+dd {
+  font-size: 0.96rem;
+  margin: 0;
+}
+.stub {
+  background: var(--primary);
+  border-top: 1px dashed var(--tick);
+  padding: 13px 25px;
+  color: var(--light);
+  font-size: 0.72rem;
+}
+.notice {
+  font-size: 0.8rem;
+  color: var(--signal);
+  line-height: 1.5;
+}
+.intro a,
+.history a {
+  color: var(--primary);
+  text-underline-offset: 0.15em;
+}
+.history {
+  grid-column: 1 / -1;
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 20px;
+}
+.history h2 {
+  margin: 0 0 8px;
+}
+.historyStatus,
+.historyNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.historyNote {
+  margin-top: 12px;
+  max-width: 76ch;
+  font-size: 0.86rem;
+}
+.historyTable {
+  width: 100%;
+  margin: 22px 0 15px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.94rem;
+}
+.historyTable th,
+.historyTable td {
+  text-align: right;
+  padding: 13px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.historyTable tr > :first-child {
+  padding-left: 0;
+  text-align: left;
+}
+.historyTable tr > :last-child {
+  padding-right: 0;
+}
+.historyTable thead th,
+.mobileLabel {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.historyTable tbody th {
+  font-weight: 550;
+}
+.historyTable time span {
+  display: inline-block;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.mobileLabel {
+  display: none;
+}
+.guide {
+  border-top: 1px solid var(--line);
+  padding: 35px 0 54px;
+  display: grid;
+  grid-template-columns: 1fr 1.65fr;
+  gap: 48px;
+}
+.questions details {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.questions details:first-child {
+  padding-top: 0;
+}
+summary {
+  font-size: 0.97rem;
+  font-weight: 625;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  gap: 20px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+summary:after {
+  content: '+';
+  color: var(--muted);
+  font: 1.1rem monospace;
+}
+details[open] summary:after {
+  content: '−';
+}
+.questions p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  max-width: 65ch;
+  margin: 10px 22px 0 0;
+}
+footer {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+footer .bar {
+  padding: 23px 0;
+}
+footer a {
+  color: var(--primary);
+}
+footer b {
+  margin: 0 4px;
+}
+@media (max-width: 790px) {
+  .workspace {
+    column-gap: 28px;
+    padding: 45px 0;
+    grid-template-columns: 1fr 0.95fr;
+  }
+  h1 {
+    font-size: 3rem;
+  }
+  .wrap {
+    width: calc(100% - 48px);
+  }
+  .guide {
+    gap: 22px;
+  }
+}
+@media (max-width: 640px) {
+  header .bar {
+    height: 59px;
+  }
+  .wrap {
+    width: calc(100% - 36px);
+  }
+  .provider {
+    font-size: 0.64rem;
+    gap: 4px;
+  }
+  .provider i {
+    display: none;
+  }
+  .brand {
+    font-size: 1.18rem;
+  }
+  .brand img {
+    width: 28px;
+    height: 28px;
+  }
+  .workspace,
+  .guide {
+    display: block;
+  }
+  .workspace {
+    padding: 32px 0;
+  }
+  h1 {
+    font-size: 2.72rem;
+    margin: 12px 0;
+  }
+  .intro {
+    font-size: 1rem;
+  }
+  form {
+    margin-top: 23px;
+    max-width: none;
+  }
+  .receipt {
+    margin-top: 24px;
+  }
+  .history {
+    margin-top: 30px;
+    padding-top: 24px;
+  }
+  .historyTable,
+  .historyTable tbody {
+    display: block;
+  }
+  .historyTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .historyTable tbody tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+  }
+  .historyTable tbody th,
+  .historyTable tbody td {
+    padding: 0;
+    border: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+  .historyTable tbody th {
+    grid-column: 1 / -1;
+  }
+  .historyTable {
+    margin: 18px 0 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .mobileLabel {
+    display: block;
+    margin-bottom: 3px;
+  }
+  .receiptBody {
+    padding: 14px 20px;
+  }
+  .gauge {
+    width: 155px;
+  }
+  .guide {
+    padding: 26px 0;
+  }
+  .questions {
+    margin-top: 24px;
+  }
+  footer .bar {
+    align-items: flex-start;
+    font-size: 0.7rem;
+  }
+  .stub {
+    padding: 12px 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+.historyHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.historyRange {
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.taskTable .taskName {
+  text-align: left;
+  max-width: 350px;
+  overflow-wrap: anywhere;
+}
+.taskId {
+  display: block;
+  margin-top: 5px;
+  font: 0.7rem ui-monospace, SFMono-Regular, Consolas, monospace;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.balanceChecks {
+  grid-column: 1 / -1;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.balanceChecks .historyStatus {
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+.seller {
+  padding-block: 60px;
+}
+.sellerIntro h1 {
+  font-size: clamp(2.6rem, 5vw, 3.8rem);
+  max-width: 16ch;
+}
+.sellerIntro .intro {
+  max-width: 56ch;
+}
+.connectionStatus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  margin-top: 24px;
+}
+.connectionStatus i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+}
+.connectionStatus .connectedDot {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+.connectionStatus span {
+  margin-left: 8px;
+  color: var(--muted);
+}
+.sellerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 36px;
+}
+.setupPanel {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--base);
+  min-width: 0;
+}
+.setupPanel h2 {
+  margin-block: 12px;
+}
+.setupPanel p,
+.setupHelp li {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.setupPanel form {
+  max-width: none;
+  margin-top: 22px;
+}
+.setupPanel a,
+.textLink {
+  color: var(--primary);
+  text-underline-offset: 0.15em;
+}
+.textLink {
+  display: inline-block;
+  margin-top: 28px;
+  font-size: 0.9rem;
+}
+.setupInput {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--control-line);
+  border-radius: 7px;
+  height: 46px;
+  padding: 10px;
+  background: var(--wash);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+.setupInput:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.optional {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+.setupHelp {
+  padding: 13px 0;
+  border-block: 1px solid var(--line);
+  margin-top: 20px;
+}
+.setupHelp summary {
+  font-size: 0.85rem;
+}
+.setupHelp ol {
+  margin-bottom: 12px;
+  padding-left: 20px;
+}
+.setupHelp li {
+  margin-block: 9px;
+}
+.setupHelp code {
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+.setupPanel .setupDisclosure {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin-block: 12px;
+}
+.sellerMessage {
+  padding: 14px 18px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  line-height: 1.55;
+  font-size: 0.88rem;
+  margin-block: 24px;
+}
+.success {
+  color: var(--light);
+}
+.disconnect {
+  border-top: 1px solid var(--line);
+  margin-top: 30px;
+  padding-top: 10px;
+}
+.disconnect p {
+  font-size: 0.8rem;
+}
+.secondaryButton {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--base);
+  color: var(--ink);
+  padding: 10px 14px;
+  font-size: 0.85rem;
+}
+@media (max-width: 760px) {
+  .sellerGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+}
+@media (max-width: 640px) {
+  .taskTable tbody tr {
+    grid-template-columns: 1fr 1fr;
+  }
+  .taskTable .taskName {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+  .historyHeading {
+    align-items: baseline;
+  }
+  .seller {
+    padding-block: 32px;
+  }
+  .sellerIntro h1 {
+    font-size: clamp(2.1rem, 7vw, 2.6rem);
+  }
+  .connectionStatus {
+    display: grid;
+    grid-template-columns: 8px minmax(0, 1fr);
+    row-gap: 4px;
+  }
+  .connectionStatus i {
+    align-self: start;
+    margin-top: 0.35em;
+  }
+  .connectionStatus span {
+    grid-column: 2;
+    margin-left: 0;
+  }
+  .setupPanel {
+    padding: 20px;
+  }
+  .setupInput {
+    font-size: 1rem;
+  }
+  .setupHelp {
+    padding-block: 0;
+  }
+  .setupHelp summary {
+    min-height: 44px;
+    padding-block: 12px;
+  }
+  .seller .submit {
+    height: auto;
+    min-height: 48px;
+    padding-block: 10px;
+    gap: 12px;
+    text-align: left;
+  }
+  .seller .secondaryButton,
+  .seller .textLink {
+    min-height: 44px;
+  }
+  .seller .textLink {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .sellerMessage {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Customer checker: a compact utility, with only verified figures. */
+.keyHeader .bar { height: 72px; }
+.keyHeaderLabel { color: var(--muted); font-size: 0.76rem; }
+.keyMain { max-width: 860px; }
+.keyWorkspace { padding: 58px 0 0; }
+.keyHeading { margin-bottom: 28px; }
+.keyHeading h1 { font-size: 2rem; line-height: 1.18; margin: 0 0 10px; font-weight: 650; letter-spacing: -0.035em; }
+.keyHeading p { color: var(--muted); font-size: 0.94rem; line-height: 1.5; margin: 0; }
+.keyForm { max-width: none; margin: 0; }
+.keyForm label { font-size: 0.82rem; margin-bottom: 9px; }
+.keyFormRow { display: flex; align-items: stretch; gap: 10px; }
+.keyInputWrap { flex: 1; height: 52px; min-width: 0; }
+.keyInputWrap input { font-size: 0.9rem; }
+.keySubmit { width: 170px; height: 52px; margin: 0; flex: none; font-size: 0.86rem; border-radius: 9px; }
+.keySubmit span { font-size: 1.15rem; margin-left: 12px; }
+.keyPrivacy { color: var(--muted); display: flex; align-items: center; gap: 6px; font-size: 0.74rem; margin: 12px 0 0; }
+.keyPrivacy svg { width: 14px; height: 14px; flex: none; }
+.keyError { margin: 10px 0 0; font-size: 0.82rem; }
+.keyResultArea { margin-top: 32px; }
+.keyInitial { min-height: 218px; display: flex; align-items: center; justify-content: center; flex-direction: column; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.keyInitialIcon { display: grid; place-items: center; height: 40px; width: 40px; margin-bottom: 13px; border: 1px solid var(--line); border-radius: 11px; background: var(--base); color: var(--muted); }
+.keyInitialIcon svg { width: 22px; height: 22px; }
+.keyInitial p { font-size: 0.9rem; font-weight: 550; margin: 0 0 6px; }
+.keyInitial > span { color: var(--muted); font-size: 0.8rem; }
+.keyBalancePanel { background: var(--deep); border-radius: 14px; padding: 24px 28px; color: var(--ink); }
+.keyBalanceMeta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 0.74rem; color: var(--light); font-variant-numeric: tabular-nums; }
+.keyChecked { display: inline-flex; align-items: center; gap: 6px; }
+.keyChecked i { display: inline-block; background: var(--signal); width: 5px; height: 5px; border-radius: 50%; }
+.keyBalanceAmount { margin: 28px 0 22px; }
+.keyBalanceAmount h2 { color: var(--light); font-size: 0.85rem; line-height: 1.5; letter-spacing: 0; font-weight: 450; margin: 0 0 7px; }
+.keyBalanceAmount strong { display: block; font-size: 3.25rem; line-height: 1.08; font-weight: 600; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.keyBalanceAmount strong.keyNoLimit { font-size: 1.9rem; letter-spacing: -0.025em; }
+.keyProgress { height: 4px; background: var(--tick); border-radius: 4px; overflow: hidden; margin-bottom: 24px; }
+.keyProgress span { display: block; height: 100%; background: var(--signal); border-radius: inherit; }
+.keyMetrics { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; border-color: var(--tick); padding-top: 18px; }
+.keyMetrics > div { display: block; margin: 0; }
+.keyMetrics dt { color: var(--light); font-size: 0.75rem; margin-bottom: 6px; }
+.keyMetrics dd { font: 550 1.02rem -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-variant-numeric: tabular-nums; }
+.keyWarning { color: var(--signal); font-size: 0.78rem; margin: 18px 0 0; }
+.keyHistory { margin-top: 34px; scroll-margin-top: 24px; }
+.keySectionHeading { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+.keySectionHeading h2 { font-size: 1.05rem; font-weight: 650; letter-spacing: -0.02em; margin: 0; }
+.keySectionHeading > span { color: var(--muted); font-size: 0.72rem; }
+.keyHistoryEmpty { padding: 25px 0; margin: 0; border-block: 1px solid var(--line); color: var(--muted); font-size: 0.84rem; line-height: 1.5; }
+.keyTable { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; margin-top: 8px; }
+.keyTable thead th { color: var(--muted); font-size: 0.71rem; font-weight: 500; border-block: 1px solid var(--line); }
+.keyTable th, .keyTable td { text-align: left; padding: 13px 12px; border-bottom: 1px solid var(--line); }
+.keyTable tr > :first-child { padding-left: 0; }
+.keyTable tr > :last-child { padding-right: 0; text-align: right; }
+.keyTable tbody th { font-weight: 450; min-width: 130px; }
+.keyTable time span { display: block; color: var(--muted); font-size: 0.72rem; margin-top: 4px; }
+.keyTaskName { overflow-wrap: anywhere; max-width: 320px; line-height: 1.5; }
+.keyTaskStatus { color: var(--muted); font-size: 0.76rem; }
+.keyTaskCost { font-weight: 600; white-space: nowrap; }
+.keyMobileLabel { display: none; }
+.keyReadings { border-bottom: 1px solid var(--line); padding: 18px 0; margin-top: 15px; }
+.keyReadings summary { font-size: 0.8rem; color: var(--muted); font-weight: 500; justify-content: flex-start; gap: 9px; }
+.keyReadings summary span { color: var(--muted); font-size: 0.68rem; }
+.keyReadings summary:after { margin-left: auto; font-size: 0.9rem; }
+.keyFootnote { color: var(--muted); font-size: 0.74rem; line-height: 1.5; margin: 12px 0 0; }
+.keyLoading { min-height: 218px; padding: 26px 28px; border-block: 1px solid var(--line); }
+.keySkeleton { height: 10px; max-width: 100%; border-radius: 4px; background: var(--line); }
+.keySkeletonShort { width: 120px; }
+.keySkeletonLarge { width: 220px; height: 38px; margin: 24px 0; }
+.keyLoading p { color: var(--muted); font-size: 0.78rem; margin: 18px 0 0; }
+.keyHelp { padding: 20px 0; margin: 0 0 32px; }
+.keyHelp summary { color: var(--muted); font-size: 0.78rem; font-weight: 500; }
+.keyHelp summary:after { font-size: 0.9rem; }
+.keyHelp > div { max-width: 65ch; padding-top: 4px; }
+.keyHelp p { color: var(--muted); font-size: 0.8rem; line-height: 1.6; margin: 10px 0 0; }
+.keyFooter { background: var(--base); }
+.keyFooter .bar { padding-block: 20px; font-size: 0.72rem; }
+.keyFooter nav { display: flex; gap: 24px; }
+.keyFooter a { color: var(--muted); text-decoration: none; }
+.keyFooter a:hover { color: var(--primary); text-decoration: underline; }
+@media (max-width: 640px) {
+  .keyHeader .bar { height: 62px; }
+  .keyHeaderLabel { font-size: 0.67rem; }
+  .keyWorkspace { padding-top: 36px; }
+  .keyHeading { margin-bottom: 24px; }
+  .keyHeading h1 { font-size: 1.75rem; }
+  .keyHeading p { font-size: 0.86rem; }
+  .keyFormRow { flex-direction: column; gap: 10px; }
+  .keyInputWrap { flex: auto; }
+  .keySubmit { width: 100%; justify-content: center; }
+  .keyPrivacy { justify-content: center; }
+  .keyResultArea { margin-top: 26px; }
+  .keyBalancePanel { padding: 22px; border-radius: 12px; }
+  .keyBalanceMeta { font-size: 0.68rem; gap: 6px; }
+  .keyBalanceAmount { margin-block: 24px 20px; }
+  .keyBalanceAmount strong { font-size: 2.6rem; }
+  .keyBalanceAmount strong.keyNoLimit { font-size: 1.6rem; }
+  .keySectionHeading { display: block; }
+  .keySectionHeading > span { display: block; margin-top: 6px; }
+  .keyHistory { margin-top: 28px; }
+  .keyTable, .keyTable tbody { display: block; }
+  .keyTable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .keyTable tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; row-gap: 12px; padding: 15px 0; border-top: 1px solid var(--line); }
+  .keyTable th, .keyTable td { padding: 0; border: 0; min-width: 0; }
+  .keyTable tbody th { min-width: 0; grid-column: 1 / -1; }
+  .keyTable time span { display: inline; margin-left: 7px; }
+  .keyTaskName { grid-column: 1 / -1; max-width: none; }
+  .keyTable tbody .keyTaskStatus { text-align: left; }
+  .keyTable tr > :last-child { text-align: right; }
+  .keyMobileLabel { display: block; color: var(--muted); font-size: 0.65rem; font-weight: 400; margin-bottom: 4px; }
+  .keyReadingsTable tbody tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .keyReadingsTable tr > :last-child { text-align: left; }
+  .keyReadingsTable td { overflow-wrap: anywhere; }
+  .keyHelp { margin-bottom: 20px; }
+  .keyFooter nav { gap: 16px; }
+}
+
+.keyApp {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.keyApp .keyHeader .bar { height: 74px; }
+.keyApp .brand { font-size: 1.22rem; letter-spacing: -0.03em; gap: 11px; }
+.keyApp .keyHeaderLabel { border-left: 1px solid var(--line); padding-left: 18px; }
+.keyApp .keyMain { flex: 1; }
+.keyApp .keyWorkspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; padding-top: 56px; }
+.keyLookup { min-width: 0; }
+.keyHistoryArea { min-width: 0; grid-column: 1 / -1; }
+.keyHistoryArea .keyHistory { margin-top: 0; }
+.keyApp .keyEntry { background: var(--base); border: 1px solid var(--line); border-radius: 12px; padding: 30px; }
+.keyApp .keyHeaderLabel,
+.keyApp .keyForm label,
+.keyApp .keyBalanceMeta,
+.keyApp .keySectionHeading > span,
+.keyApp .keyTable thead th,
+.keyApp .keyMetrics dt { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.keyApp .keyHeading h1 { font-size: 2.1rem; font-weight: 600; margin-bottom: 9px; }
+.keyApp .keyHeading p { font-size: 0.86rem; }
+.keyApp .keyHeading { margin-bottom: 30px; }
+.keyApp .keyForm label { font-size: 0.72rem; font-weight: 450; color: var(--light); margin-bottom: 10px; }
+.keyApp .keyInputWrap { background: var(--wash); border-radius: 8px; }
+.keyApp .keyInputWrap input { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.8rem; }
+.keyApp .keyInputWrap .show { font-size: 0.7rem; }
+.keyApp .keySubmit { border-radius: 8px; font-size: 0.8rem; }
+.keyApp .keyPrivacy { font-size: 0.7rem; margin-top: 14px; }
+.keyApp .keyResultArea { margin-top: 24px; }
+.keyApp .keyInitial { min-height: 180px; border: 1px solid var(--line); border-radius: 12px; }
+.keyApp .keyInitialIcon { height: 35px; width: 35px; border-radius: 6px; background: transparent; margin-bottom: 12px; }
+.keyApp .keyInitialIcon svg { width: 20px; height: 20px; }
+.keyApp .keyInitial p { color: var(--light); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.75rem; font-weight: 400; }
+.keyApp .keyInitial > span { font-size: 0.74rem; }
+.keyApp .keyBalancePanel { background: var(--deep); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; }
+.keyApp .keyBalanceAmount strong { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 3rem; font-weight: 500; }
+.keyApp .keyBalanceAmount strong.keyNoLimit { font-family: inherit; font-size: 1.9rem; }
+.keyApp .keyMetrics dd { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 400; }
+.keyApp .keyTable { font-size: 0.78rem; }
+.keyApp .keyTaskCost { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-weight: 450; }
+.keyApp .keyTable tbody tr:hover { background: var(--base); }
+.keyApp .keyTable thead th { font-size: 0.66rem; }
+.keyApp .keySectionHeading > span { font-size: 0.66rem; }
+.keyApp .keyLoading { border: 1px solid var(--line); border-radius: 9px; background: var(--base); }
+.keyApp .keyHelp { padding-inline: 1px; }
+.keyApp .keyFooter { background: var(--wash); }
+.keyApp .keyFooter .bar { font-size: 0.67rem; padding-block: 21px; }
+@media (min-width: 1080px) {
+  .keyApp .keyMain { max-width: 1160px; }
+  .keyApp .keyWorkspace { grid-template-columns: minmax(0, 1fr) 340px; }
+}
+@media (max-width: 640px) {
+  .keyApp .wrap { width: calc(100% - 32px); }
+  .keyApp .keyHeader .bar { height: 62px; }
+  .keyApp .brand { font-size: 1.12rem; }
+  .keyApp .keyHeaderLabel { font-size: 0.7rem; padding-left: 12px; }
+  .keyApp .keyWorkspace { padding-top: 20px; }
+  .keyApp .keyEntry { padding: 22px 16px; }
+  .keyApp .keyHeading { margin-bottom: 22px; }
+  .keyApp .keyHeading h1 { font-size: 1.7rem; }
+  .keyApp .keyHeading p { font-size: 0.9rem; }
+  .keyApp .keyForm label { font-size: 0.8rem; }
+  .keyApp .keyInputWrap { padding: 0 4px 0 8px; gap: 6px; }
+  .keyApp .keyInputWrap input { font-size: 1rem; padding-inline: 0; }
+  .keyApp .keyInputWrap svg { width: 16px; }
+  .keyApp .keyInputWrap .show { flex: none; min-width: 44px; min-height: 44px; padding-inline: 6px; font-size: 0.8rem; }
+  .keyApp .keySubmit { height: 48px; font-size: 0.92rem; }
+  .keyApp .keyInitial { min-height: 132px; padding: 16px; text-align: center; }
+  .keyApp .keyResultArea { margin-top: 16px; }
+  .keyApp .keyBalancePanel { padding: 18px 16px; }
+  .keyApp .keyBalanceAmount strong { font-size: clamp(1.7rem, 7vw, 2.45rem); }
+  .keyApp .keyBalanceAmount strong.keyNoLimit { font-size: 1.55rem; }
+  .keyApp .keyBalanceMeta { flex-wrap: wrap; font-size: 0.72rem; }
+  .keyChecked i { flex: none; }
+  .keyMetrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .keyApp .keyMetrics dd { font-size: 0.92rem; overflow-wrap: anywhere; }
+  .keyApp .keyTable { font-size: 0.88rem; }
+  .keyApp .keyTaskCost { white-space: normal; overflow-wrap: anywhere; }
+  .keyMobileLabel { font-size: 0.72rem; }
+  .keyReadings, .keyApp .keyHelp { padding-block: 0; }
+  .keyReadings summary, .keyApp .keyHelp summary { align-items: center; min-height: 44px; }
+  .keyApp .keyHelp { margin-top: 12px; }
+  .keyApp .keyFooter .bar { align-items: center; flex-wrap: wrap; gap: 4px 16px; padding-block: 10px; font-size: 0.75rem; }
+  .keyFooter nav { flex-wrap: wrap; gap: 0 16px; }
+  .keyFooter a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+@media (max-width: 420px) {
+  .keyReadingsTable tbody tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .keyReadingsTable tr > :last-child { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .keyApp .keySubmit { transition: none; }
+}

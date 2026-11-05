@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS app_settings (
+  id VARCHAR(100) PRIMARY KEY,
+  value_json TEXT NOT NULL,
+  updated_at VARCHAR(40) NOT NULL
+) ENGINE=InnoDB;

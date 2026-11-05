@@ -1,0 +1,30 @@
+.panel { margin-top: 28px; padding: 28px; border: 1px solid var(--line); border-radius: 12px; background: var(--base); }
+.panel h2 { margin: 0 0 10px; }
+.panel p { color: var(--muted); font-size: .86rem; line-height: 1.6; margin: 8px 0 16px; }
+.panel p:global(.error) { color: var(--ink); font-weight: 550; }
+.panel p:global(.success) { color: var(--light); }
+.panel form { max-width: 560px; margin-top: 20px; }
+.rows { border-top: 1px solid var(--line); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.row label { margin: 0; font-size: .84rem; }
+.row label strong { font-weight: 550; }
+.row label > span { display: block; color: var(--muted); font-size: .7rem; font-weight: 400; margin-top: 4px; }
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 180px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--muted) 60%, var(--line));
+  border-radius: 7px;
+  background: var(--wash);
+}
+.inputWrap input { color: var(--ink); font-size: .88rem; font-variant-numeric: tabular-nums; }
+.inputWrap > span { color: var(--muted); font-size: .75rem; }
+.inputWrap:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (max-width: 640px) {
+  .panel { padding: 20px; margin-top: 20px; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) min(62%, 9.75rem); gap: 12px; }
+  .inputWrap { width: auto; padding-block: 0; }
+  .inputWrap input { min-height: 44px; font-size: 1rem; }
+}
