@@ -269,10 +269,9 @@ button:disabled {
   color: var(--light);
 }
 .gauge {
-  width: 190px;
-  max-width: 90%;
+  width: min(100%, 240px);
   display: block;
-  margin: 0 auto;
+  margin: 20px auto 0;
 }
 .rim {
   stroke: var(--tick);
@@ -280,13 +279,13 @@ button:disabled {
   stroke-width: 1;
 }
 .gauge text {
-  fill: white;
-  font-size: 24px;
+  fill: var(--ink);
+  font-size: 32px;
   font-weight: 600;
 }
 .gauge .tickLabel {
   fill: var(--light);
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.1em;
 }
 .balance {
@@ -557,7 +556,7 @@ footer b {
     padding: 14px 20px;
   }
   .gauge {
-    width: 155px;
+    width: min(100%, 210px);
   }
   .guide {
     padding: 26px 0;
@@ -856,8 +855,7 @@ footer b {
 .keyBalanceAmount h2 { color: var(--light); font-size: 0.85rem; line-height: 1.5; letter-spacing: 0; font-weight: 450; margin: 0 0 7px; }
 .keyBalanceAmount strong { display: block; font-size: 3.25rem; line-height: 1.08; font-weight: 600; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .keyBalanceAmount strong.keyNoLimit { font-size: 1.9rem; letter-spacing: -0.025em; }
-.keyProgress { height: 4px; background: var(--tick); border-radius: 4px; overflow: hidden; margin-bottom: 24px; }
-.keyProgress span { display: block; height: 100%; background: var(--signal); border-radius: inherit; }
+.gauge + .keyBalanceAmount { margin-top: 8px; text-align: center; }
 .keyMetrics { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; border-color: var(--tick); padding-top: 18px; }
 .keyMetrics > div { display: block; margin: 0; }
 .keyMetrics dt { color: var(--light); font-size: 0.75rem; margin-bottom: 6px; }

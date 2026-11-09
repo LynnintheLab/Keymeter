@@ -27,6 +27,39 @@ const localTime = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: 
 function KeyIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" aria-hidden="true"><circle cx="8" cy="9" r="4.5" /><path d="m11.5 12.5 7 7 2-2-1.5-1.5 1-1-2-2-1 1-3.5-3.5" /></svg>;
 }
+
+const tickCount = 45;
+
+function BalanceGauge({ fraction }: { fraction: number }) {
+  const percent = Math.round(fraction * 100);
+  const filledTicks = Math.round(fraction * tickCount);
+
+  return (
+    <svg className="gauge" viewBox="0 0 240 122" role="img" aria-label={`${percent} percent remaining`}>
+      <path className="rim" d="M18 115a102 102 0 0 1 204 0" />
+      {Array.from({ length: tickCount }, (_, index) => {
+        const angle = Math.PI * (1 - index / (tickCount - 1));
+        const x = Math.cos(angle);
+        const y = Math.sin(angle);
+
+        return (
+          <line
+            key={index}
+            x1={120 + 83 * x}
+            y1={115 - 83 * y}
+            x2={120 + 96 * x}
+            y2={115 - 96 * y}
+            stroke={index < filledTicks ? 'var(--signal)' : 'var(--tick)'}
+            strokeWidth="3.7"
+          />
+        );
+      })}
+      <text x="120" y="91" textAnchor="middle">{percent}%</text>
+      <text className="tickLabel" x="120" y="112" textAnchor="middle">REMAINING</text>
+    </svg>
+  );
+}
+
 function formatCharge(value: number, currency: string) {
   if (!/^[A-Z]{3}$/.test(currency)) return `${value.toFixed(6)} ${currency}`;
   return new Intl.NumberFormat('en-US', {
@@ -137,7 +170,9 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
     } finally { setBusy(false); }
   }
   const warning = result?.state === 'expired' ? 'Key expired' : result?.state === 'exhausted' ? 'Spending limit reached' : '';
-  const fraction = result?.limit === null || !result ? null : result.limit === 0 ? 0 : Math.max(0, Math.min(1, (result.remaining ?? 0) / result.limit));
+  const fraction = result && result.limit !== null && result.remaining !== null
+    ? result.limit === 0 ? 0 : Math.max(0, Math.min(1, result.remaining / result.limit))
+    : null;
   return <section className="keyWorkspace">
     <div className="keyLookup">
     <div className="keyEntry">
@@ -160,8 +195,8 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
       {result ? <>
         <section className="keyBalancePanel" aria-labelledby="remainingTitle">
           <div className="keyBalanceMeta"><span>Key ····{result.suffix}</span><span className="keyChecked"><i aria-hidden="true" />Checked {localTime.format(new Date(result.checkedAt))}</span></div>
+          {fraction !== null && <BalanceGauge fraction={fraction} />}
           <div className="keyBalanceAmount"><h2 id="remainingTitle">{result.remaining === null ? 'Spending limit' : 'Remaining allowance'}</h2><strong className={result.remaining === null ? 'keyNoLimit' : undefined}>{result.remaining === null ? 'No limit reported' : money(result.remaining)}</strong></div>
-          {fraction !== null && <div className="keyProgress" role="img" aria-label={`${Math.round(fraction * 100)} percent remaining`}><span style={{ width: `${fraction * 100}%` }} /></div>}
           <dl className="keyMetrics"><div><dt>Limit</dt><dd>{result.limit === null ? 'Not reported' : money(result.limit)}</dd></div><div><dt>Used</dt><dd>{money(result.used)}</dd></div></dl>
           {warning && <p className="keyWarning">{warning}</p>}
         </section>
