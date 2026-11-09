@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
+import { createServer, get } from 'node:http';
 import { spawn, spawnSync } from 'node:child_process';
 import { access, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -19,6 +19,20 @@ async function listen(server) {
   return server.address().port;
 }
 const sleep = duration => new Promise(resolve => setTimeout(resolve, duration));
+
+function getFromSocket(socketPath, origin, path, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const request = get({ socketPath, path, headers: { host: new URL(origin).host, ...headers } }, response => {
+      response.setEncoding('utf8');
+      let body = '';
+      response.on('data', chunk => { body += chunk; });
+      response.on('end', () => resolve({ status: response.statusCode, headers: response.headers, body }));
+      response.on('error', reject);
+    });
+    request.on('error', reject);
+    request.setTimeout(2000, () => request.destroy(new Error('LiteSpeed socket request timed out.')));
+  });
+}
 
 async function browserForm(origin, path, cookie = '') {
   const response = await fetch(origin + path, { headers: { cookie }, redirect: 'manual' });
@@ -446,4 +460,38 @@ test('standalone owner authentication and MySQL compatibility', async t => {
     'Owner price changes must appear in the visible page card without opening a dialog.');
   assert.equal((await savePrices(defaults)).status, 200);
 
+  await t.test('LiteSpeed socket serves the Keymeter gateway', async t => {
+    const socketPath = join(directory, 'lsnode.sock');
+    const child = spawn(process.execPath, ['./hostinger/tests/fixtures/lsnode.cjs'], {
+      cwd: siteRoot,
+      env: { ...process.env, PORT: String(publicPort), APP_URL: productionOrigin, LSNODE_BIND_SOCKET: '1', LSNODE_SOCKET: socketPath },
+      stdio: 'ignore',
+    });
+    const exited = new Promise(resolve => child.once('exit', resolve));
+    t.after(async () => {
+      child.kill('SIGTERM');
+      await exited;
+    });
+    let publicHome;
+    for (let attempt = 0; attempt < 80 && child.exitCode === null; attempt++) {
+      try { publicHome = await getFromSocket(socketPath, productionOrigin, '/'); break; }
+      catch { await sleep(100); }
+    }
+    assert.ok(publicHome, 'The application must listen on the LiteSpeed socket.');
+    assert.equal(publicHome.status, 200);
+    assert.match(publicHome.body, /Keymeter/);
+
+    const loginPage = await getFromSocket(socketPath, productionOrigin, '/login');
+    assert.equal(loginPage.status, 200);
+    assert.match(loginPage.body, /Send sign-in code/);
+    const seller = await getFromSocket(socketPath, productionOrigin, '/seller', spoof);
+    assert.equal(seller.status, 303);
+    assert.equal(seller.headers.location, productionOrigin + '/login');
+    const billing = await getFromSocket(socketPath, productionOrigin, '/api/seller/billing', spoof);
+    assert.equal(billing.status, 403);
+    assert.equal(billing.body, 'Seller sign-in is required.');
+    const ownerBilling = await getFromSocket(socketPath, productionOrigin, '/api/seller/billing', { cookie: ownerCookie });
+    assert.equal(ownerBilling.status, 200);
+    assert.equal(JSON.parse(ownerBilling.body).connected, false);
+  });
 });

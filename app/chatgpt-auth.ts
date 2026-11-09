@@ -1,3 +1,5 @@
+import { env } from "cloudflare:workers";
+import { timingSafeEqual } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -23,6 +25,13 @@ export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
   const userId = requestHeaders.get(USER_ID_HEADER);
   const email = requestHeaders.get(USER_EMAIL_HEADER);
   if (!userId || !email) return null;
+
+  if (env.SELLER_AUTH_MODE === "hostinger-gateway-v1") {
+    // The gateway supplies a process-local proof after verifying the owner session.
+    const expected = Buffer.from(process.env.KEYMETER_GATEWAY_PROOF ?? "");
+    const supplied = Buffer.from(requestHeaders.get("x-keymeter-gateway-proof") ?? "");
+    if (!expected.length || supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) return null;
+  }
 
   const encodedFullName = requestHeaders.get(USER_FULL_NAME_HEADER);
   const fullName =

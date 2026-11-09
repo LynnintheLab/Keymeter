@@ -157,7 +157,7 @@ export function verifiedForm(headers, token, now = Date.now()) {
 }
 export function sanitizedHeaders(headers, remoteAddress, owner) {
   const clean = {};
-  const blocked = new Set(['host', 'forwarded', 'cf-connecting-ip', 'true-client-ip', 'x-real-ip', 'x-keymeter-client-ip', 'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailer', 'transfer-encoding', 'upgrade']);
+  const blocked = new Set(['host', 'forwarded', 'cf-connecting-ip', 'true-client-ip', 'x-real-ip', 'x-keymeter-client-ip', 'x-keymeter-gateway-proof', 'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailer', 'transfer-encoding', 'upgrade']);
   for (const value of String(headers.connection ?? '').split(',')) blocked.add(value.trim().toLowerCase());
   for (const [name, value] of Object.entries(headers)) {
     const lower = name.toLowerCase();
@@ -170,6 +170,8 @@ export function sanitizedHeaders(headers, remoteAddress, owner) {
   if (owner) {
     clean['oai-authenticated-user-id'] = owner.userId;
     clean['oai-authenticated-user-email'] = owner.email;
+    const proof = process.env.KEYMETER_GATEWAY_PROOF;
+    if (proof) clean['x-keymeter-gateway-proof'] = proof;
   }
   return clean;
 }
