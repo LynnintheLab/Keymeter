@@ -431,6 +431,13 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   assert.equal(homepage.status, 200);
   const homepageHtml = await homepage.text();
   assert.match(homepageHtml, /Keymeter/);
+  // Link previews need an absolute image URL on the site's own origin.
+  assert.ok(homepageHtml.includes(`<meta property="og:image" content="${productionOrigin}/og.jpg"`), 'The home page must offer a link preview image.');
+  assert.ok(homepageHtml.includes('<meta name="twitter:card" content="summary_large_image"'));
+  const previewImage = await fetch(productionOrigin + '/og.jpg');
+  assert.equal(previewImage.status, 200);
+  assert.equal(previewImage.headers.get('content-type'), 'image/jpeg');
+  assert.ok((await previewImage.arrayBuffer()).byteLength < 300_000, 'Some messengers skip preview images over 300 KB.');
   const priceCard = /<aside\b[\s\S]*?<\/aside>/.exec(homepageHtml)?.[0];
   const contactDialog = /<dialog\b[\s\S]*?<\/dialog>/.exec(homepageHtml)?.[0];
   assert.ok(priceCard, 'Package pricing must be visible on the server-rendered page.');
