@@ -26,7 +26,7 @@ In hPanel, select Websites → Create site → Web App → Continue with GitHub 
 | Start command, if shown | npm run start:hostinger |
 | Install command, if shown | npm ci --include=dev |
 
-The build puts server.mjs at both the project root and output root. Hostinger can therefore use the same entry filename in either case. The app listens on PORT and all interfaces. Its internal production renderer listens only on loopback behind the authenticated gateway.
+The build puts server.mjs at both the project root and output root. Hostinger can therefore use the same entry filename in either case. The gateway and renderer share the single HTTP listener managed by Hostinger. Running the app directly in Node uses PORT.
 
 ## 3. Create a MySQL database
 

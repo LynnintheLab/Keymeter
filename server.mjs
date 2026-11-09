@@ -1,27 +1,28 @@
 import { createServer, Server as HttpServer } from 'node:http';
-import { Server as NetServer } from 'node:net';
 import { randomBytes } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
-async function startRenderer(output) {
+async function startApp(output, port, host, createGatewayHandler) {
   const { startProdServer } = await import('vinext/server/prod-server');
-  const options = { port: 0, host: '127.0.0.1', outDir: output, silent: true };
   const publicListen = HttpServer.prototype.listen;
-  if (publicListen === NetServer.prototype.listen) return startProdServer(options);
 
-  // LiteSpeed assigns its public socket to the first HTTP listen. Bind only the
-  // renderer's private loopback socket here, then restore the gateway's listener.
-  HttpServer.prototype.listen = function (port, host, callback) {
-    if (port !== options.port || host !== options.host || typeof callback !== 'function') {
-      throw new Error('Unexpected private renderer listen arguments.');
+  // Vinext initializes its renderer before calling listen. Wrap its handler
+  // before that single listener is exposed to LiteSpeed or directly to Node.
+  HttpServer.prototype.listen = function (listenPort, listenHost, callback) {
+    HttpServer.prototype.listen = publicListen;
+    const [renderApp, ...others] = this.listeners('request');
+    if (listenPort !== port || listenHost !== host || typeof callback !== 'function' || !renderApp || others.length) {
+      throw new Error('Unexpected Vinext HTTP server configuration.');
     }
-    this.address = NetServer.prototype.address;
-    return NetServer.prototype.listen.call(this, port, host, callback);
+    this.off('request', renderApp);
+    this.on('request', createGatewayHandler(renderApp));
+    return publicListen.call(this, listenPort, listenHost, callback);
   };
   try {
-    return await startProdServer(options);
+    const { server } = await startProdServer({ port, host, outDir: output, silent: true });
+    return server;
   } finally {
     HttpServer.prototype.listen = publicListen;
   }
@@ -36,7 +37,7 @@ async function main() {
   const hostinger = file => pathToFileURL(join(output, 'hostinger', file)).href;
   const { configProblems } = await import(hostinger('config.mjs'));
   const { migrateDatabase, closeDatabase } = await import(hostinger('database.mjs'));
-  const { createGateway } = await import(hostinger('gateway.mjs'));
+  const { createGatewayHandler } = await import(hostinger('gateway.mjs'));
   const problems = configProblems();
   let ready = problems.length === 0;
   if (!ready) console.error(problems.join('\n'));
@@ -49,42 +50,35 @@ async function main() {
     }
   }
 
-  let internal;
+  const port = Number(process.env.PORT || 3000);
+  const host = process.env.KEYMETER_BIND_HOST || '0.0.0.0';
   let server;
-  const shutdown = async () => {
-    if (internal) await new Promise(resolve => internal.close(resolve));
-    await closeDatabase();
-  };
   try {
     if (ready) {
       process.env.VINEXT_TRUSTED_HOSTS = new URL(process.env.APP_URL).host;
       process.env.KEYMETER_GATEWAY_PROOF = randomBytes(32).toString('base64url');
-      ({ server: internal } = await startRenderer(output));
-      const endpoint = internal.address();
-      if (endpoint?.address !== '127.0.0.1') throw new Error('Private renderer did not bind to loopback.');
-      server = createGateway(endpoint.port);
+      server = await startApp(output, port, host, createGatewayHandler);
     } else {
       server = createServer((_request, response) => {
         response.writeHead(503, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
         response.end('<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keymeter setup</title><body style="font:16px system-ui;max-width:560px;margin:15vh auto;padding:24px"><h1>Keymeter setup is incomplete</h1><p>Add the database, owner login, and encryption settings in Hostinger, then restart the app.</p></body></html>');
       });
-    }
-    const port = Number(process.env.PORT || 3000);
-    await new Promise((resolve, reject) => {
-      server.once('error', reject);
-      server.listen(port, process.env.KEYMETER_BIND_HOST || '0.0.0.0', () => {
-        server.off('error', reject);
-        resolve();
+      await new Promise((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(port, host, () => {
+          server.off('error', reject);
+          resolve();
+        });
       });
-    });
+    }
     console.log(`Keymeter ${ready ? 'production app' : 'setup page'} listening on port ${port}`);
   } catch (error) {
-    await shutdown();
+    await closeDatabase();
     throw error;
   }
 
   for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => {
-    server.close(() => { void shutdown().finally(() => process.exit(0)); });
+    server.close(() => { void closeDatabase().finally(() => process.exit(0)); });
     setTimeout(() => process.exit(0), 5000).unref();
   });
 }

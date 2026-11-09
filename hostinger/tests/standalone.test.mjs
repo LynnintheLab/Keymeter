@@ -12,7 +12,7 @@ import { configProblems } from '../config.mjs';
 import { passwordHash, verifyPassword, sanitizedHeaders, cookieHeader, checkLogin, createFormProtection, FORM_TTL } from '../security.mjs';
 import { beginEmailChallenge, verifyEmailChallenge, emailChallenge, resendEmailChallenge, verifyEmailChange, sendLoginCode, CODE_TTL } from '../email-auth.mjs';
 import { ownerAccount, authenticatedOwner, REMEMBER_TTL } from '../security.mjs';
-import { createGateway } from '../gateway.mjs';
+import { createGatewayHandler } from '../gateway.mjs';
 
 async function listen(server) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -70,8 +70,6 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   process.env.APP_URL = 'https://keys.example.test';
   assert.match(cookieHeader('synthetic'), /__Host-keymeter-session=.*HttpOnly; SameSite=Strict.*Secure/);
 
-  const internal = createServer((request, response) => { response.setHeader('Content-Type', 'application/json'); response.end(JSON.stringify(request.headers)); });
-  const internalPort = await listen(internal);
   const gatewayProbe = createServer();
   const gatewayPort = await listen(gatewayProbe);
   await new Promise(resolve => gatewayProbe.close(resolve));
@@ -86,18 +84,34 @@ test('standalone owner authentication and MySQL compatibility', async t => {
     return Response.json({ id: 'synthetic-message-id' });
   };
   const latestCode = () => /code is (\d{6})/.exec(delivered.at(-1).text)[1];
-  const gateway = createGateway(internalPort, { emailTransport });
+  const renderer = (request, response) => {
+    response.setHeader('Content-Type', 'application/json');
+    response.end(JSON.stringify({
+      headers: request.headers,
+      headersDistinct: request.headersDistinct,
+      rawHeaders: request.rawHeaders,
+    }));
+  };
+  const gateway = createServer(createGatewayHandler(renderer, { emailTransport }));
   await new Promise(resolve => gateway.listen(gatewayPort, '127.0.0.1', resolve));
-  t.after(() => Promise.all([new Promise(resolve => internal.close(resolve)), new Promise(resolve => gateway.close(resolve))]));
-  const spoof = { 'oai-authenticated-user-id': 'hostinger-owner', 'oai-authenticated-user-email': 'owner@example.test', 'cf-connecting-ip': 'spoof', 'x-keymeter-client-ip': 'spoof' };
+  t.after(() => new Promise(resolve => gateway.close(resolve)));
+  const spoof = { 'oai-authenticated-user-id': 'hostinger-owner', 'oai-authenticated-user-email': 'owner@example.test', 'cf-connecting-ip': 'spoof',
+    'x-keymeter-client-ip': 'spoof', 'x-keymeter-gateway-proof': 'spoof' };
   assert.equal((await fetch(origin + '/api/seller/billing', { headers: spoof })).status, 403);
   const protectedPage = await fetch(origin + '/seller', { headers: spoof, redirect: 'manual' });
   assert.equal(protectedPage.status, 303);
   assert.equal(protectedPage.headers.get('location'), origin + '/login');
   const forwarded = await (await fetch(origin + '/api/allowance', { headers: spoof })).json();
-  assert.equal(forwarded['oai-authenticated-user-id'], undefined);
-  assert.equal(forwarded['cf-connecting-ip'], undefined);
-  assert.equal(forwarded['x-keymeter-client-ip'], '127.0.0.1');
+  for (const name of ['oai-authenticated-user-id', 'oai-authenticated-user-email', 'cf-connecting-ip', 'x-keymeter-gateway-proof']) {
+    assert.equal(forwarded.headers[name], undefined);
+    assert.equal(forwarded.headersDistinct[name], undefined);
+    assert.ok(!forwarded.rawHeaders.some(value => value.toLowerCase() === name));
+  }
+  assert.equal(forwarded.headers['x-keymeter-client-ip'], '127.0.0.1');
+  assert.deepEqual(forwarded.headersDistinct['x-keymeter-client-ip'], ['127.0.0.1']);
+  const forwardedAddress = forwarded.rawHeaders.indexOf('x-keymeter-client-ip');
+  assert.ok(forwardedAddress >= 0);
+  assert.equal(forwarded.rawHeaders[forwardedAddress + 1], '127.0.0.1');
   assert.equal((await fetch(origin + '/login', { method: 'POST', headers: { origin: 'https://evil.test', 'content-type': 'application/x-www-form-urlencoded' }, body: 'email=owner@example.test&password=synthetic' })).status, 403);
 
   if (spawnSync('mariadb-install-db', ['--help'], { stdio: 'ignore' }).error) {
@@ -201,7 +215,7 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   assert.equal((await verify(pendingCookie, code)).status, 401, 'A consumed code must not be replayed.');
   const ownerResponse = await fetch(origin + '/api/seller/billing', { headers: { cookie } });
   assert.equal(ownerResponse.status, 200);
-  assert.equal((await ownerResponse.json())['oai-authenticated-user-email'], 'owner@example.test');
+  assert.equal((await ownerResponse.json()).headers['oai-authenticated-user-email'], 'owner@example.test');
   const stored = await getPool().execute('SELECT token_hash FROM auth_sessions');
   assert.ok(!JSON.stringify(stored).includes(cookie.split('=')[1]));
   let busyLogin;
@@ -460,7 +474,7 @@ test('standalone owner authentication and MySQL compatibility', async t => {
     'Owner price changes must appear in the visible page card without opening a dialog.');
   assert.equal((await savePrices(defaults)).status, 200);
 
-  await t.test('LiteSpeed socket serves the Keymeter gateway', async t => {
+  await t.test('LiteSpeed socket serves gateway and renderer with a single listener', async t => {
     const socketPath = join(directory, 'lsnode.sock');
     const child = spawn(process.execPath, ['./hostinger/tests/fixtures/lsnode.cjs'], {
       cwd: siteRoot,
@@ -480,6 +494,9 @@ test('standalone owner authentication and MySQL compatibility', async t => {
     assert.ok(publicHome, 'The application must listen on the LiteSpeed socket.');
     assert.equal(publicHome.status, 200);
     assert.match(publicHome.body, /Keymeter/);
+    const pricing = await getFromSocket(socketPath, productionOrigin, '/api/pricing');
+    assert.equal(pricing.status, 200);
+    assert.deepEqual(JSON.parse(pricing.body).packages, defaults);
 
     const loginPage = await getFromSocket(socketPath, productionOrigin, '/login');
     assert.equal(loginPage.status, 200);

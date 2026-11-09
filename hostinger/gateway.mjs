@@ -1,4 +1,3 @@
-import { createServer, request as proxyRequest } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import { requireConfig, emailConfigProblems } from './config.mjs';
 import { createFormProtection, verifiedForm, authenticatedOwner, checkLogin, cookieHeader, deleteSession, sanitizedHeaders, tokenFromCookie,
@@ -84,10 +83,10 @@ async function formBody(request) {
   for await (const chunk of request) { length += chunk.length; if (length > 8192) throw new Error(); chunks.push(chunk); }
   return new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
 }
-export function createGateway(internalPort, { emailTransport = fetch } = {}) {
+export function createGatewayHandler(renderApp, { emailTransport = fetch } = {}) {
   const appOrigin = new URL(requireConfig().APP_URL).origin;
   const redirect = (response, path, cookies) => respond(response, 303, '', { Location: appOrigin + path, ...(cookies ? { 'Set-Cookie': cookies } : {}) });
-  return createServer(async (request, response) => {
+  return async (request, response) => {
     try {
       const pathname = new URL(request.url, appOrigin).pathname;
       const authToken = tokenFromCookie(request.headers.cookie), pending = preauthFromCookie(request.headers.cookie);
@@ -214,14 +213,15 @@ export function createGateway(internalPort, { emailTransport = fetch } = {}) {
       }
       if ((pathname === '/seller' || pathname.startsWith('/seller/')) && !owner) return redirect(response, '/login');
       if ((pathname === '/api/seller' || pathname.startsWith('/api/seller/')) && !owner) return respond(response, 403, 'Seller sign-in is required.');
-      const forwarded = proxyRequest({ hostname: '127.0.0.1', port: internalPort, method: request.method, path: request.url,
-        headers: sanitizedHeaders(request.headers, request.socket.remoteAddress, owner) }, upstream => {
-        response.writeHead(upstream.statusCode || 502, { ...upstream.headers, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' }); upstream.pipe(response);
-      });
-      forwarded.on('error', () => { if (!response.headersSent) respond(response, 503, 'The app is restarting. Try again shortly.'); else response.destroy(); });
-      request.on('aborted', () => forwarded.destroy()); request.pipe(forwarded);
+      request.headers = sanitizedHeaders(request.headers, request.socket.remoteAddress, owner);
+      const distinctHeaders = Object.entries(request.headers).map(([name, value]) => [name, [value].flat()]);
+      request.headersDistinct = Object.fromEntries(distinctHeaders);
+      request.rawHeaders = distinctHeaders.flatMap(([name, values]) => values.flatMap(value => [name, value]));
+      response.setHeader('X-Content-Type-Options', 'nosniff');
+      response.setHeader('Referrer-Policy', 'no-referrer');
+      await renderApp(request, response);
     } catch {
       if (!response.headersSent) respond(response, 503, 'Seller access is temporarily unavailable. Please try again.'); else response.destroy();
     }
-  });
+  };
 }
