@@ -59,18 +59,17 @@ export default function TopUpOffer({ initialPackages }: { initialPackages: Price
   }, [load]);
 
   return <>
-    <aside className={styles.offer} aria-labelledby={heading}>
-      <div className={styles.priceHeading}><h2 id={heading}>Running Hub<br />Enterprise Share Key</h2></div>
+    <aside id="key-packages" className={styles.offer} aria-labelledby={heading}>
+      <div className={styles.priceHeading}><h2 id={heading}>Running Hub Enterprise Share Key</h2></div>
       <div className={styles.priceContent} aria-busy={loading}>
         {loading && !packages && <p className={styles.priceStatus} role="status">Loading current prices…</p>}
         {error && <div className={styles.priceStatus} role="status"><p>{error}</p><button className={styles.retry} type="button" onClick={() => void load()}>Retry prices</button></div>}
-        {packages && <table className={styles.prices} aria-label="RunningHub key packages and prices in Myanmar kyat">
-          <thead><tr><th scope="col">Amount</th><th scope="col">Price</th></tr></thead>
-          <tbody>{packages.map(option => <tr key={option.usd} className={packageBadge(option.usd) ? styles.featured : undefined}>
-            <th scope="row"><span className={styles.amount}>{option.usd} <small>USD</small></span>{packageBadge(option.usd) && <span className={styles.badge}>{packageBadge(option.usd)}</span>}</th>
-            <td>{kyat(option.kyat)} <span>Ks</span></td>
-          </tr>)}</tbody>
-        </table>}
+        {packages && <ul className={styles.prices} aria-label="RunningHub key packages and prices in Myanmar kyat">
+          {packages.map(option => <li key={option.usd} className={packageBadge(option.usd) ? styles.featured : undefined}>
+            <div><span className={styles.amount}>{option.usd} <small>USD</small></span>{packageBadge(option.usd) && <span className={styles.badge}>{packageBadge(option.usd)}</span>}</div>
+            <p className={styles.price}>{kyat(option.kyat)} <span>Ks</span></p>
+          </li>)}
+        </ul>}
       </div>
       <div className={styles.offerFooter}>
         <button ref={trigger} className={styles.trigger} type="button" onClick={() => dialog.current?.showModal()} aria-haspopup="dialog">

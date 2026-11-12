@@ -438,7 +438,7 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   assert.equal(previewImage.status, 200);
   assert.equal(previewImage.headers.get('content-type'), 'image/jpeg');
   assert.ok((await previewImage.arrayBuffer()).byteLength < 300_000, 'Some messengers skip preview images over 300 KB.');
-  const priceCard = /<aside\b[\s\S]*?<\/aside>/.exec(homepageHtml)?.[0];
+  const priceCard = /<aside\b[^>]*\bid="key-packages"[\s\S]*?<\/aside>/.exec(homepageHtml)?.[0];
   const contactDialog = /<dialog\b[\s\S]*?<\/dialog>/.exec(homepageHtml)?.[0];
   assert.ok(priceCard, 'Package pricing must be visible on the server-rendered page.');
   assert.match(priceCard, /62,000/);
@@ -477,7 +477,7 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   assert.equal((await savePrices(updated)).status, 200);
   assert.deepEqual((await (await fetch(productionOrigin + '/api/pricing')).json()).packages, updated);
   const updatedHome = await (await fetch(productionOrigin)).text();
-  assert.match(/<aside\b[\s\S]*?<\/aside>/.exec(updatedHome)?.[0] || '', /63,000/,
+  assert.match(/<aside\b[^>]*\bid="key-packages"[\s\S]*?<\/aside>/.exec(updatedHome)?.[0] || '', /63,000/,
     'Owner price changes must appear in the visible page card without opening a dialog.');
   assert.equal((await savePrices(defaults)).status, 200);
 

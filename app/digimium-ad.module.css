@@ -1,0 +1,79 @@
+@font-face {
+  font-family: 'Walone';
+  src: url('/fonts/walone-regular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+1000-109F, U+A9E0-A9FF, U+AA60-AA7F;
+}
+.ad { position: relative; min-width: 0; align-self: start; }
+.link {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--base);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 160ms;
+}
+.link:hover { border-color: var(--control-line); }
+.link:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+.scene { position: relative; overflow: hidden; aspect-ratio: 3 / 2; background: linear-gradient(135deg, #2857d4 0%, #1f45b8 44%, #051650 100%); isolation: isolate; }
+.wordmark { position: absolute; left: 23%; top: 40%; width: 54%; height: auto; filter: brightness(0) invert(1); }
+.tile {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: #fafafa;
+  border-radius: 22%;
+  box-shadow: 0 8px 14px rgb(0 10 48 / .28), inset 0 -3px 1px rgb(0 0 0 / .14);
+  transform: rotate(var(--angle));
+  animation: drift var(--duration) ease-in-out var(--delay) infinite alternate;
+  animation-play-state: paused;
+}
+.tile img { display: block; width: 68%; height: 68%; object-fit: contain; }
+.scene[data-moving='true'] .tile { animation-play-state: running; }
+.chatgpt { --x: 5%; --y: 21%; --size: 18%; --angle: -17deg; --dx: 3px; --dy: -8px; --duration: 7.4s; --delay: -2s; }
+.gemini { --x: 34%; --y: 6%; --size: 15%; --angle: 14deg; --dx: -4px; --dy: 5px; --duration: 6.6s; --delay: -4s; }
+.photoshop { --x: 66%; --y: 7%; --size: 15%; --angle: 15deg; --dx: 4px; --dy: -4px; --duration: 8.4s; --delay: -5s; background: #001e36; }
+.lightroom { --x: 81%; --y: 49%; --size: 14%; --angle: -15deg; --dx: -3px; --dy: 7px; --duration: 7.1s; --delay: -1s; background: #001e36; }
+.evoto { --x: 5%; --y: 70%; --size: 14%; --angle: 12deg; --dx: -3px; --dy: -5px; --duration: 8.1s; --delay: -3s; background: #171719; }
+.runninghub { --x: 28%; --y: 70%; --size: 17%; --angle: -9deg; --dx: 4px; --dy: -6px; --duration: 7.7s; --delay: -5s; background: #000; }
+.spotify { --x: 60%; --y: 68%; --size: 16%; --angle: 17deg; --dx: -3px; --dy: 4px; --duration: 6.9s; --delay: -2s; background: #111; }
+.netflix { --x: 51%; --y: 19%; --size: 19%; --angle: -13deg; --dx: 3px; --dy: 5px; --duration: 8.8s; --delay: -7s; aspect-ratio: 1.55; border-radius: 16%; background: #111; }
+.photoshop img, .lightroom img, .evoto img, .runninghub img { width: 100%; height: 100%; border-radius: inherit; }
+.netflix img { width: 78%; height: 65%; }
+.motionControl { position: absolute; z-index: 1; top: 8px; right: 8px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 6px; background: rgb(5 22 80 / .82); color: #fff; cursor: pointer; }
+.motionControl svg { width: 18px; height: 18px; }
+.motionControl:hover { background: #051650; }
+.motionControl:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@keyframes drift {
+  to { transform: translate3d(var(--dx), var(--dy), 0) rotate(calc(var(--angle) + 4deg)); }
+}
+.content { padding: 24px; }
+.content h2 { margin: 0 0 8px; font-size: 1.25rem; font-weight: 600; line-height: 1.35; letter-spacing: -.025em; }
+.content p { margin: 0; color: var(--muted); font-family: 'Walone', system-ui, sans-serif; font-size: .86rem; line-height: 1.9; }
+.footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 28px; }
+.action { display: inline-flex; align-items: center; gap: 10px; font-size: .84rem; font-weight: 550; }
+.action svg { width: 18px; height: 18px; flex: none; }
+.label { color: var(--muted); font-size: .7rem; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (min-width: 1080px) {
+  .ad { grid-column: 2; grid-row: 1; }
+}
+@media (max-width: 1079px) and (min-width: 641px) {
+  .link { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+}
+@media (max-width: 420px) {
+  .content { padding: 22px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .link { transition: none; }
+  .tile { animation: none; }
+  .motionControl { display: none; }
+}

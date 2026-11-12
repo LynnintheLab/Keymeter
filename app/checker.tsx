@@ -4,6 +4,7 @@ import type { Allowance } from '@/lib/quota';
 import type { HistoryEntry } from '@/lib/history';
 import type { PricePackage } from '@/lib/pricing';
 import TopUpOffer from './top-up-offer';
+import DigimiumAd from './digimium-ad';
 
 type TaskHistory = {
   state: 'ready' | 'not_connected' | 'not_enrolled' | 'not_found' | 'reconnect' | 'unavailable';
@@ -203,6 +204,7 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
       </> : busy ? <div className="keyLoading" role="status"><div className="keySkeleton keySkeletonShort" /><div className="keySkeleton keySkeletonLarge" /><div className="keySkeleton" /><p>Checking balance and job history…</p></div> : <div className="keyInitial"><div className="keyInitialIcon"><KeyIcon /></div><p>{error ? 'No balance available' : 'No key checked'}</p><span>{error ? 'Check your key and try again.' : 'Your allowance will appear here.'}</span></div>}
     </div>
     </div>
+    <DigimiumAd />
     {result && <div className="keyHistoryArea"><TaskUsage result={result} /><BalanceChecks result={result} /></div>}
     <TopUpOffer initialPackages={initialPackages} />
   </section>;

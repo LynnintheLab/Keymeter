@@ -10,6 +10,8 @@ Keymeter is a customer-facing balance and billing checker for RunningHub Enterpr
 4. View **Usage history** for up to 50 recent jobs from the last 30 days when seller billing is available and the key can be matched safely. Each row shows the charge RunningHub reports for that job.
 5. Select **Top up my key** under the USD packages and Ks prices to contact the seller on Facebook or Telegram. The seller handles purchases through those channels.
 
+The checker also features a Digimium store advertisement linking to [buywith-digimium.store](https://buywith-digimium.store/). It appears beside the checker on desktop, with the API packages below the checker and usage history. On mobile, the advertisement and prices stack below the balance area.
+
 The checker is responsive on mobile and desktop. Keymeter uses the submitted key for the read-only lookup and stores a one-way fingerprint with its balance history.
 
 ## Seller dashboard
