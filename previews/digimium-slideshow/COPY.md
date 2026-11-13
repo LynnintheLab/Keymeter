@@ -4,71 +4,13 @@ Status: **approval-only preview**. This copy does not change the live Keymeter c
 
 Destination for every store CTA: <https://buywith-digimium.store/>
 
-## Slide 1 — What customers can buy
+## Final five-slide copy
 
-Headline:
-
-> AI၊ Creative နဲ့ Entertainment  
-> တစ်နေရာတည်းမှာ
-
-Supporting copy:
-
-> ChatGPT · Gemini · Adobe Creative Cloud · Netflix · Spotify
-
-Visual: Digimium wordmark with freely floating representative product logos on the brand-blue background.
-
-## Slide 2 — Easy purchase
-
-Headline:
-
-> ရွေးမယ်။ Order ပို့မယ်။
-
-Supporting copy:
-
-> Product ရွေး → Plan ရွေး → Telegram မှာ Send
-
-Visual: Three simple steps, showing that checkout prepares an order for the customer to send in Telegram.
-
-## Slide 3 — Payment confirmation
-
-Headline:
-
-> ငွေမပေးခင်  
-> အရင်အတည်ပြုမယ်
-
-Supporting copy:
-
-> Plan၊ ဈေးနှုန်းနဲ့ ငွေပေးချေနည်းကို Telegram မှာ အတည်ပြုပေးပါတယ်။
-
-Visual: An order card and a Telegram confirmation cue. Do not show payment-provider logos.
-
-## Slide 4 — Variety of choices
-
-Headline:
-
-> ကိုယ်နဲ့ကိုက်တာ  
-> စိတ်ကြိုက်ရွေးပါ
-
-Supporting copy:
-
-> အလုပ်အတွက်၊ ဖန်တီးမှုအတွက်၊ အပန်းဖြေဖို့အတွက်
-
-Visual: AI / Creative / Entertainment groups with representative verified brands.
-
-## Slide 5 — Clear prices and store CTA
-
-Headline:
-
-> သင့်တော်တဲ့ Plan၊  
-> ရှင်းလင်းတဲ့ ဈေးနှုန်း
-
-Supporting copy:
-
-> လက်ရှိ Plan နဲ့ ဈေးနှုန်းကို အရင်မေးမြန်းပြီး ဝယ်ယူနိုင်ပါတယ်။
-
-Primary CTA: **Visit Digimium ↗**
-
-Visual: Digimium wordmark, a concise product selection, and one clear store button.
+1. **လိုအပ်တဲ့ App တွေ တစ်နေရာတည်းမှာ ဝယ်ပါ။** — AI · Creative · Entertainment. Representative ChatGPT, Gemini, Adobe, Netflix and Spotify artwork.
+2. **ရွေးစရာ App တွေ စုံစုံလင်လင်ရှိပါတယ်။** — အလုပ်အတွက်။ ဖန်တီးဖို့။ အပန်းဖြေဖို့။ Three category rows with real product logos.
+3. **ရွေးပါ။ Order ပို့လိုက်ပါ။** — App ရွေး → Plan ရွေး → Telegram မှာ Send. A plan-selection card represents the handoff, not a completed transaction.
+4. **ငွေပေးချေဖို့လည်း Chat မှာ ကူညီပေးမယ်။** — Plan၊ ဈေးနှုန်းနဲ့ ငွေပေးချေနည်းကို အရင်အတည်ပြုနိုင်ပါတယ်။ A conceptual Telegram exchange shows payment guidance without naming a provider.
+5. **သင့်တင့်တဲ့ဈေးနှုန်းနဲ့ စိတ်ကြိုက်ရွေးဝယ်ပါ။** — ကိုယ်နဲ့ကိုက်တဲ့ Plan နဲ့ လက်ရှိဈေးနှုန်းကို အရင်မေးမြန်းနိုင်ပါတယ်။ CTA: **Digimium မှာ ရွေးကြည့်မယ်**. Fair pricing is the owner's positioning, not a comparative cheapest-price claim.
 
 ## Verified source
 

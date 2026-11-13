@@ -1,1 +1,282 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Digimium · Ad slideshow review</title><script src="vendor/hyperframes-player.global.js"></script><script src="vendor/hyperframes-slideshow.global.js"></script><style>*{box-sizing:border-box}body{margin:0;background:#050505;color:#fff;font:15px/1.6 system-ui,sans-serif}header{max-width:1180px;margin:0 auto;padding:28px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}header strong{font-size:19px;font-weight:550}header span{color:#a7a7ad}.preview{max-width:1180px;margin:20px auto 0;padding:0 24px}dialog{width:min(1180px,calc(100vw - 32px));max-width:1180px;border:1px solid #343434;border-radius:22px;padding:0;overflow:hidden;background:#0b0b0b;color:#fff;box-shadow:0 32px 150px #0009}dialog::backdrop{background:#000b}.dialog-top{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #252525;font:13px/1.5 system-ui,sans-serif;color:#c6c6cc}button{font:inherit;cursor:pointer;background:#171717;border:1px solid #444;color:#fff;padding:9px 14px;border-radius:9px}.close{display:flex;align-items:center;gap:9px}.close svg{width:17px;height:17px}button:hover{background:#282828}button:focus-visible,a:focus-visible{outline:2px solid #fff;outline-offset:4px}hyperframes-slideshow{display:block;position:relative;width:100%;height:auto;aspect-ratio:16/9;min-height:210px;outline-offset:-4px}hyperframes-player{position:absolute;inset:0}.note{max-width:860px;margin:30px auto;padding:0 24px;color:#aaa;text-align:center;font-size:14px}.open{display:block;margin:45px auto}.muted{color:#aaa}.intro{max-width:620px;margin:14vh auto;text-align:center;padding:24px}.intro h1{font-size:34px;line-height:1.2;letter-spacing:-.04em}.intro p{color:#aaa}#deck-title{color:#fff}a{color:#fff}.dialog-bottom{padding:15px 20px;font-size:12px;color:#b7b7bf;display:flex;justify-content:space-between;gap:16px;border-top:1px solid #252525}@media(max-width:600px){header span{display:none}header{padding:20px}.preview{padding:0}dialog{width:calc(100vw - 16px);border-radius:14px}.dialog-top{padding:12px}.dialog-bottom{padding:12px;font-size:11px}.dialog-bottom span:last-child{display:none}hyperframes-slideshow{aspect-ratio:16/10}.intro{margin-top:10vh}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}</style></head><body><header><strong>Digimium · Ad preview</strong><span>5 slides · Approval preview</span></header><main class="intro"><h1>A short introduction to Digimium.</h1><p>Apps, choices, ordering, payment guidance and pricing.</p><button class="open" id="open-deck">Open slideshow</button><p class="muted">The live checker is unchanged.</p><a href="review.jpg">View all five slides</a></main><dialog id="review-dialog" aria-labelledby="deck-title"><div class="dialog-top"><span id="deck-title">Digimium advertisement</span><button class="close" id="close-deck" aria-label="Close slideshow">Close<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><hyperframes-slideshow tabindex="0" aria-label="Five-slide Digimium advertisement"><hyperframes-player interactive src="composition/index.html"></hyperframes-player><script type="application/hyperframes-slideshow+json">{"slides": [{"sceneId": "all-in-one", "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."}, {"sceneId": "choices", "notes": "Variety of choices. Approval preview. Current availability and payment instructions are confirmed with Digimium."}, {"sceneId": "easy-order", "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."}, {"sceneId": "easy-payment", "notes": "Payment guidance. Approval preview. Current availability and payment instructions are confirmed with Digimium."}, {"sceneId": "fair-price", "notes": "Fair pricing and store link. Approval preview. Current availability and payment instructions are confirmed with Digimium."}], "slideSequences": []}</script></hyperframes-slideshow><div class="dialog-bottom"><span>Use ← → or swipe to review</span><span>Preview only · No changes to balance checks</span></div></dialog><script>const dialog=document.getElementById('review-dialog');const open=document.getElementById('open-deck');function show(){dialog.showModal();}open.addEventListener('click',show);document.getElementById('close-deck').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog){const box=dialog.getBoundingClientRect();if(e.clientX<box.left||e.clientX>box.right||e.clientY<box.top||e.clientY>box.bottom)dialog.close();}});show();</script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Digimium · Ad slideshow review</title>
+    <script src="vendor/hyperframes-player.global.js"></script>
+    <script src="vendor/hyperframes-slideshow.global.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #050505;
+        color: #fff;
+        font:
+          15px/1.6 system-ui,
+          sans-serif;
+      }
+      header {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      header strong {
+        font-size: 19px;
+        font-weight: 550;
+      }
+      header span {
+        color: #a7a7ad;
+      }
+      .preview {
+        max-width: 1180px;
+        margin: 20px auto 0;
+        padding: 0 24px;
+      }
+      dialog {
+        width: min(1180px, calc(100vw - 32px), calc((100dvh - 150px) * 1.777778));
+        max-width: 1180px;
+        border: 1px solid #343434;
+        border-radius: 22px;
+        padding: 0;
+        overflow: hidden;
+        background: #0b0b0b;
+        color: #fff;
+        box-shadow: 0 32px 150px #0009;
+      }
+      dialog::backdrop {
+        background: #000b;
+      }
+      .dialog-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid #252525;
+        font:
+          13px/1.5 system-ui,
+          sans-serif;
+        color: #c6c6cc;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        background: #171717;
+        border: 1px solid #444;
+        color: #fff;
+        padding: 9px 14px;
+        border-radius: 9px;
+      }
+      .close {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .close svg {
+        width: 17px;
+        height: 17px;
+      }
+      button:hover {
+        background: #282828;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 4px;
+      }
+      hyperframes-slideshow {
+        display: block;
+        position: relative;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+        min-height: 210px;
+        outline-offset: -4px;
+      }
+      hyperframes-player {
+        position: absolute;
+        inset: 0;
+      }
+      .note {
+        max-width: 860px;
+        margin: 30px auto;
+        padding: 0 24px;
+        color: #aaa;
+        text-align: center;
+        font-size: 14px;
+      }
+      .open {
+        display: block;
+        margin: 45px auto;
+      }
+      .muted {
+        color: #aaa;
+      }
+      .intro {
+        max-width: 620px;
+        margin: 14vh auto;
+        text-align: center;
+        padding: 24px;
+      }
+      .intro h1 {
+        font-size: 34px;
+        line-height: 1.2;
+        letter-spacing: -0.04em;
+      }
+      .intro p {
+        color: #aaa;
+      }
+      #deck-title {
+        color: #fff;
+      }
+      a {
+        color: #fff;
+      }
+      .dialog-bottom {
+        padding: 15px 20px;
+        font-size: 14px;
+        color: #b7b7bf;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        border-top: 1px solid #252525;
+      }
+      @media (max-width: 600px) {
+        header span {
+          display: none;
+        }
+        header {
+          padding: 20px;
+        }
+        .preview {
+          padding: 0;
+        }
+        dialog {
+          width: min(calc(100vw - 16px), calc((100dvh - 130px) * 0.6));
+          border-radius: 14px;
+        }
+        .dialog-top {
+          padding: 12px;
+        }
+        .dialog-bottom {
+          padding: 12px;
+          font-size: 14px;
+        }
+        .dialog-bottom span:last-child {
+          display: none;
+        }
+        hyperframes-slideshow {
+          aspect-ratio: 3/5;
+        }
+        .intro {
+          margin-top: 10vh;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>Digimium · Ad preview</strong
+      ><span>5 slides · Approval preview</span>
+    </header>
+    <main class="intro">
+      <h1>A short introduction to Digimium.</h1>
+      <p>Apps, choices, ordering, payment guidance and pricing.</p>
+      <button class="open" id="open-deck">Open slideshow</button>
+      <p class="muted">The live checker is unchanged.</p>
+      <a href="review.jpg">View all five slides</a>
+    </main>
+    <dialog id="review-dialog" aria-labelledby="deck-title">
+      <div class="dialog-top">
+        <span id="deck-title">Digimium advertisement</span
+        ><button class="close" id="close-deck" aria-label="Close slideshow">
+          Close<svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+          >
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+      <hyperframes-slideshow
+        tabindex="0"
+        aria-label="Five-slide Digimium advertisement"
+        ><hyperframes-player
+          interactive
+          src="composition/index.html"
+        ></hyperframes-player>
+        <script type="application/hyperframes-slideshow+json">
+          {
+            "slides": [
+              {
+                "sceneId": "root",
+                "endTime": 6,
+                "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+              },
+              {
+                "sceneId": "choices",
+                "notes": "Variety of choices. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+              },
+              {
+                "sceneId": "easy-order",
+                "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+              },
+              {
+                "sceneId": "easy-payment",
+                "notes": "Payment guidance. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+              },
+              {
+                "sceneId": "fair-price",
+                "notes": "Fair pricing and store link. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+              }
+            ],
+            "slideSequences": []
+          }
+        </script></hyperframes-slideshow
+      >
+      <div class="dialog-bottom">
+        <span>Use ← → or swipe to review</span
+        ><span>Preview only · No changes to balance checks</span>
+      </div>
+    </dialog>
+    <script>
+      const player = document.querySelector('hyperframes-player');
+      if (window.matchMedia('(max-width: 600px)').matches) player.setAttribute('src', 'composition-mobile/index.html');
+      const dialog = document.getElementById("review-dialog");
+      const open = document.getElementById("open-deck");
+      function show() {
+        dialog.showModal();
+      }
+      open.addEventListener("click", show);
+      document
+        .getElementById("close-deck")
+        .addEventListener("click", () => dialog.close());
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog) {
+          const box = dialog.getBoundingClientRect();
+          if (
+            e.clientX < box.left ||
+            e.clientX > box.right ||
+            e.clientY < box.top ||
+            e.clientY > box.bottom
+          )
+            dialog.close();
+        }
+      });
+      show();
+    </script>
+  </body>
+</html>

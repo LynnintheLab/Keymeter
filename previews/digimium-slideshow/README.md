@@ -11,7 +11,7 @@ arrow keys or swipe. The built-in Present button opens presenter/audience mode.
 `npm run present` serves the raw composition with the HyperFrames presentation UI.
 
 `review.jpg` is an overview; the `stills` folder contains a full-size still of every slide.
-All fonts, images and playback scripts are local, so viewing needs no third-party requests.
+All fonts, images and playback scripts are local. The mobile preview uses a portrait layout with the same copy and artwork; regenerate it with `npm run prepare:mobile` after editing the desktop source.
 
 ## Content
 
@@ -42,7 +42,11 @@ No automatic popup, ad frequency rule or production integration is included in t
 
 ## Local runtime assets
 
-`vendor/hyperframes-*.global.js`: HyperFrames 0.7.84, MIT license.
+`vendor/hyperframes-*.global.js`: HyperFrames 0.7.84, Apache-2.0 license (included in `vendor/HYPERFRAMES-LICENSE`).
 `vendor/gsap.min.js`: GSAP 3.14.2; its upstream license notice is retained in the file.
 Brand artwork and Walone Myanmar font are copied from the existing project assets;
 their original source references remain in `../../public/digimium/README.md`.
+
+## Validation result
+
+Both desktop and portrait compositions pass static, runtime, layout and WCAG text-contrast checks at all five slide hold points. Four authoring warnings remain: repeated brand artwork and composition file length. They were reviewed against the rendered stills; all logos appear correctly. This preview uses large headings and the existing Myanmar font intentionally. The desktop browser controller was unavailable, so manual browser interaction was not claimed as verified.

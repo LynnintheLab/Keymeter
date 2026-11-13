@@ -32,3 +32,11 @@ The Connection test deliberately measures the unassisted route, so its Balance A
 - If the fixed addresses in `FALLBACK_ADDRESSES` ever stop serving the hostname, the resolver's own answers still apply; update the list from a fresh `node hostinger/diagnose-runninghub.mjs` rather than guessing.
 - Verify seller per-job charges and job history against RunningHub now that the route works, separately from balance.
 - Preserve SESSION_SECRET and BILLING_ENCRYPTION_KEY. Do not rotate tokens or keys to troubleshoot network behaviour.
+
+## Digimium slideshow approval preview (2026-11-13)
+
+- Prepared five short Burmese ad slides covering apps to buy, variety, Telegram ordering, payment guidance and fair-price positioning. Verified the purchasing flow against the storefront production source; payment instructions are confirmed in Telegram, so no unsupported payment-provider logos or cheapest-price promises are used.
+- Added an isolated runnable review in `previews/digimium-slideshow/`, including desktop and portrait layouts, original brand artwork, local fonts/scripts, per-slide stills and `review.jpg`.
+- Static/runtime/layout/text-contrast checks passed at all five slide positions for both layouts. Reused brand artwork and the single-file deck length are reviewed authoring warnings. The browser controller is disabled; manual navigation is not claimed as browser-tested.
+- The checker, Check button, authentication, billing connection, routing fix and production app behavior are unchanged by this preview. Awaiting owner approval before integrating an immediately closeable ad popup.
+- Next: review the five slides and wording; after approval, connect the popup to Check while the real lookup continues in the background.

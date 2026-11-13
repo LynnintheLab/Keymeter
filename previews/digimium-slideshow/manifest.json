@@ -1,8 +1,9 @@
 {
   "slides": [
     {
-      "sceneId": "all-in-one",
-      "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+      "sceneId": "root",
+      "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "endTime": 6
     },
     {
       "sceneId": "choices",
