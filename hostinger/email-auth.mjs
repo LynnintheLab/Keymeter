@@ -144,7 +144,7 @@ export async function verifyEmailChange(token, code, transport = fetch, now = Da
     if (changed.affectedRows !== 1) throw invalid();
     await connection.execute('DELETE FROM auth_sessions');
     await connection.execute('DELETE FROM owner_email_challenges');
-    return { token: await createSession(SESSION_TTL, now, connection), ttl: SESSION_TTL };
+    return { token: await createSession(REMEMBER_TTL, now, connection), ttl: REMEMBER_TTL };
   });
   if (!result) throw invalid();
   if (result.proof) return { challenge: await beginEmailChallenge(result.proof, '', false, transport, now) };
@@ -186,7 +186,7 @@ export async function verifyOwnerKeyChallenge(token, code, purpose, now = Date.n
     }
     await connection.execute('DELETE FROM auth_sessions');
     await connection.execute('DELETE FROM owner_email_challenges');
-    const ttl = SESSION_TTL;
+    const ttl = REMEMBER_TTL;
     return { key, token: await createSession(ttl, now, connection), ttl };
   });
   if (!result) throw invalid();

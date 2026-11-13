@@ -1,18 +1,28 @@
 import { randomBytes } from 'node:crypto';
 import { requireConfig, emailConfigProblems } from './config.mjs';
-import { createFormProtection, verifiedForm, authenticatedOwner, checkLogin, cookieHeader, deleteSession, sanitizedHeaders, tokenFromCookie,
+import { createFormProtection, verifiedForm, authenticatedSession, checkLogin, cookieHeader, deleteSession, sanitizedHeaders, tokenFromCookie,
   preauthCookieHeader, preauthFromCookie, ownerAccount, validOwnerEmail } from './security.mjs';
 import { beginEmailChallenge, emailChallenge, resendEmailChallenge, verifyEmailChallenge, verifyEmailChange, beginOwnerSetup, beginKeyRecovery, verifyOwnerKeyChallenge, EmailCodeError } from './email-auth.mjs';
+import { runProviderDiagnostics } from './provider-health.mjs';
 
 const commonHeaders = { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'X-Frame-Options': 'DENY' };
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+function mergedCookies(...sources) {
+  const cookies = new Map();
+  for (const value of sources.flat(Infinity))
+    if (typeof value === 'string') cookies.set(value.split('=')[0], value);
+  return [...cookies.values()];
+}
 function respond(response, status, message, headers = {}) {
-  response.writeHead(status, { ...commonHeaders, 'Content-Type': 'text/plain; charset=utf-8', ...headers }); response.end(message);
+  const cookies = mergedCookies(response.getHeader('Set-Cookie'), headers['Set-Cookie']);
+  response.writeHead(status, { ...commonHeaders, 'Content-Type': 'text/plain; charset=utf-8', ...headers,
+    ...(cookies.length ? { 'Set-Cookie': cookies } : {}) }); response.end(message);
 }
 function page(response, options = {}) {
   const { message = '', status = 200, headers = {}, stage = 'password', bootstrap = false, email = '', newCode = false, protection, setupEmail = '', issuedKey = '', startSetup = false } = options;
   const nonce = randomBytes(16).toString('base64');
-  response.writeHead(status, { ...commonHeaders, ...headers, 'Set-Cookie': [protection.cookie, ...[headers['Set-Cookie'] || []].flat()], 'Content-Type': 'text/html; charset=utf-8',
+  response.writeHead(status, { ...commonHeaders, ...headers,
+    'Set-Cookie': mergedCookies(response.getHeader('Set-Cookie'), protection.cookie, headers['Set-Cookie']), 'Content-Type': 'text/html; charset=utf-8',
     'Content-Security-Policy': `default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'` });
   const isChange = stage === 'change';
   let title, content;
@@ -21,7 +31,7 @@ function page(response, options = {}) {
     content = '<p>Add ADMIN_EMAIL in your private hosting or preview settings, then restart to begin email verification.</p><p><a href="/">Back to the key checker</a></p>';
   } else if (stage === 'issued') {
     title = 'Save your owner key';
-    content = `<p>This key is shown once. Save it in your password manager.</p><label for="owner-key">Your new 64-character key</label><textarea id="owner-key" class="ownerKey" rows="4" readonly spellcheck="false" autocomplete="off">${escape(issuedKey)}</textarea><button id="copy-key" type="button">Copy key</button><p id="copy-status" role="status"></p><p><a href="/seller">I saved my key — continue to billing →</a></p><p class="hint">Use this key and an email code to sign in next time. Forgot key replaces it after email verification.</p>`;
+    content = `<p>This key is shown once. Save it in your password manager.</p><label for="owner-key">Your new 64-character key</label><textarea id="owner-key" class="ownerKey" rows="4" readonly spellcheck="false" autocomplete="off">${escape(issuedKey)}</textarea><button id="copy-key" type="button">Copy key</button><p id="copy-status" role="status"></p><p><a href="/seller">I saved my key — continue to billing →</a></p><p class="hint">This browser will stay signed in while you use it. You’ll need your key and an email code again after signing out or 90 days of inactivity.</p>`;
   } else if (stage === 'forgot') {
     title = 'Forgot your owner key?';
     content = `<p>Verify your owner email to create a replacement key.</p><form action="/forgot-key" method="post"><label for="email">Owner email</label><input id="email" name="email" type="email" autocomplete="username" maxlength="254" required><button type="submit">Send recovery code</button></form><p><a href="/login">Back to sign in</a></p>`;
@@ -37,7 +47,7 @@ function page(response, options = {}) {
     content = `<p>Verify your email. Your owner key will appear once after verification.</p><form action="/login" method="post"><label for="email">Owner email</label><input id="email" name="email" type="email" autocomplete="username" maxlength="254" value="${escape(setupEmail)}" readonly required><button type="submit">Send setup code</button></form><p><a href="/">Back to the key checker</a></p>`;
   } else {
     title = bootstrap ? 'Set up owner access' : 'Owner sign in';
-    content = `<p>${bootstrap ? 'Choose your owner email. Your configured password and an email code are required.' : 'Enter your owner key, then verify the email code.'}</p><form action="/login" method="post"><label for="email">${bootstrap ? 'Your owner email' : 'Email'}</label><input id="email" name="email" type="email" autocomplete="username" maxlength="254" required><label for="password">Owner key</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required><label class="remember"><input name="remember" type="checkbox" value="yes">Remember this browser for 7 days</label><button type="submit">Send sign-in code</button></form><p><a href="/forgot-key">Forgot key?</a></p><p><a href="/">Back to the key checker</a></p>`;
+    content = `<p>${bootstrap ? 'Choose your owner email. Your configured password and an email code are required.' : 'Enter your owner key, then verify the email code.'}</p><form action="/login" method="post"><label for="email">${bootstrap ? 'Your owner email' : 'Email'}</label><input id="email" name="email" type="email" autocomplete="username" maxlength="254" required><label for="password">Owner key</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required><label class="remember"><input name="remember" type="checkbox" value="yes" checked>Keep me signed in on this browser</label><p class="hint">Renews while you use it. Expires after 90 days of inactivity. Uncheck on a shared computer.</p><button type="submit">Send sign-in code</button></form><p><a href="/forgot-key">Forgot key?</a></p><p><a href="/">Back to the key checker</a></p>`;
   }
   content = content.replace(/(<form\b[^>]*method="post"[^>]*>)/g, `$1<input type="hidden" name="csrf" value="${escape(protection.token)}">`);
   const script = stage === 'issued' ? `<script nonce="${nonce}">const key=document.getElementById('owner-key');document.getElementById('copy-key').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(key.value);document.getElementById('copy-status').textContent='Copied. Save it somewhere private.'}catch{key.focus();key.select();document.getElementById('copy-status').textContent='Select and copy the key above.'}});window.addEventListener('pagehide',()=>{key.value=''})</script>` :
@@ -83,12 +93,14 @@ async function formBody(request) {
   for await (const chunk of request) { length += chunk.length; if (length > 8192) throw new Error(); chunks.push(chunk); }
   return new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
 }
-export function createGatewayHandler(renderApp, { emailTransport = fetch } = {}) {
+export function createGatewayHandler(renderApp, { emailTransport = fetch, connectionProbe = runProviderDiagnostics } = {}) {
   const appOrigin = new URL(requireConfig().APP_URL).origin;
+  let diagnosticsAvailableAt = 0;
   const redirect = (response, path, cookies) => respond(response, 303, '', { Location: appOrigin + path, ...(cookies ? { 'Set-Cookie': cookies } : {}) });
   return async (request, response) => {
     try {
-      const pathname = new URL(request.url, appOrigin).pathname;
+      const requestUrl = new URL(request.url, appOrigin);
+      const pathname = requestUrl.pathname;
       const authToken = tokenFromCookie(request.headers.cookie), pending = preauthFromCookie(request.headers.cookie);
       const render = (options = {}) => page(response, { ...options, protection: createFormProtection(request.headers) });
       const codeError = (error, stage = 'password') => {
@@ -105,8 +117,11 @@ export function createGatewayHandler(renderApp, { emailTransport = fetch } = {})
           return render({ message: 'This form expired or could not be verified. Please try signing in again. Allow cookies for this site if it happens again.', status: 403 });
         }
       }
+      const session = await authenticatedSession(authToken);
+      const owner = session?.owner ?? null;
+      if (session?.cookieTtl) response.setHeader('Set-Cookie', cookieHeader(authToken, false, session.cookieTtl));
       if (pathname === '/login' && request.method === 'GET') {
-        if (await authenticatedOwner(authToken)) return redirect(response, '/seller');
+        if (owner) return redirect(response, '/seller');
         const bootstrap = !await ownerAccount(), config = requireConfig();
         if (bootstrap && !config.ADMIN_EMAIL && !config.ADMIN_PASSWORD_HASH) return render({ stage: 'unconfigured' });
         const startSetup = bootstrap && !!config.ADMIN_EMAIL && !emailConfigProblems().length && new URL(request.url, appOrigin).searchParams.get('start') === 'setup';
@@ -179,7 +194,23 @@ export function createGatewayHandler(renderApp, { emailTransport = fetch } = {})
         await deleteSession(authToken);
         return redirect(response, '/login', [cookieHeader('', true), preauthCookieHeader('', true)]);
       }
-      const owner = await authenticatedOwner(authToken);
+      if (pathname === '/api/seller/diagnostics') {
+        if (!owner) return respond(response, 403, 'Seller sign-in is required.');
+        if (request.method !== 'POST') return respond(response, 405, 'Use the connection test button.', { Allow: 'POST' });
+        if (request.headers.origin !== appOrigin ||
+            (request.headers['sec-fetch-site'] && request.headers['sec-fetch-site'] !== 'same-origin'))
+          return respond(response, 403, 'Run the connection test from this site.');
+        if (requestUrl.search || request.headers['transfer-encoding'] ||
+            (request.headers['content-length'] && request.headers['content-length'] !== '0')) {
+          request.resume();
+          return respond(response, 400, 'The connection test does not accept inputs.');
+        }
+        const now = Date.now();
+        if (now < diagnosticsAvailableAt) return respond(response, 429, 'Wait before testing the connection again.',
+          { 'Retry-After': String(Math.ceil((diagnosticsAvailableAt - now) / 1000)) });
+        diagnosticsAvailableAt = now + 30_000;
+        return respond(response, 200, JSON.stringify(await connectionProbe()), { 'Content-Type': 'application/json; charset=utf-8' });
+      }
       if (pathname === '/owner/email' || pathname.startsWith('/owner/email/')) {
         if (!owner) return redirect(response, '/login');
         if (pathname === '/owner/email' && request.method === 'GET') return render({ stage: 'settings', email: owner.email });

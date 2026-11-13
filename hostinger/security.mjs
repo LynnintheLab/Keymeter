@@ -5,7 +5,8 @@ import { requireConfig } from './config.mjs';
 
 const derive = promisify(scrypt);
 export const SESSION_TTL = 8 * 60 * 60;
-export const REMEMBER_TTL = 7 * 24 * 60 * 60;
+export const REMEMBER_TTL = 90 * 24 * 60 * 60;
+const rememberRenewInterval = 24 * 60 * 60;
 const loginWindow = 10_000;
 const loginActorLimit = 6;
 const loginGlobalLimit = 20;
@@ -57,7 +58,9 @@ export function cookieName() {
 }
 export function cookieHeader(token, clear = false, ttl = SESSION_TTL) {
   const secure = new URL(requireConfig().APP_URL).protocol === 'https:';
-  return `${cookieName()}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${clear ? 0 : ttl}${secure ? '; Secure' : ''}`;
+  // Lax keeps a remembered login on ordinary top-level links from email or
+  // another website. All mutating owner forms still require their signed proof.
+  return `${cookieName()}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${clear ? 0 : ttl}${secure ? '; Secure' : ''}`;
 }
 export function tokenFromCookie(header = '') {
   const prefix = cookieName() + '=';
@@ -101,15 +104,35 @@ export async function createSession(ttl = SESSION_TTL, now = Date.now(), connect
   if (!owner) throw new Error('Verified owner email is required.');
   const token = randomBytes(32).toString('base64url');
   await connection.execute('DELETE FROM auth_sessions WHERE expires_at <= ?', [now]);
-  await connection.execute('INSERT INTO auth_sessions (token_hash, expires_at) VALUES (?, ?)', [sessionHash(token, owner), now + ttl * 1000]);
+  await connection.execute('INSERT INTO auth_sessions (token_hash, expires_at, remember_browser) VALUES (?, ?, ?)',
+    [sessionHash(token, owner), now + ttl * 1000, ttl === REMEMBER_TTL ? 1 : 0]);
   return token;
 }
-export async function authenticatedOwner(token) {
+export async function authenticatedSession(token, now = Date.now(), renew = true) {
   if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
   const owner = await ownerAccount();
   if (!owner) return null;
-  const [rows] = await getPool().execute('SELECT token_hash FROM auth_sessions WHERE token_hash = ? AND expires_at > ?', [sessionHash(token, owner), Date.now()]);
-  return rows.length ? { userId: 'hostinger-owner', email: owner.email } : null;
+  const hash = sessionHash(token, owner);
+  const read = () => getPool().execute('SELECT expires_at, remember_browser FROM auth_sessions WHERE token_hash = ? AND expires_at > ?', [hash, now]);
+  let [rows] = await read();
+  if (!rows.length) return null;
+  const remembered = Number(rows[0].remember_browser) === 1;
+  let expiresAt = Number(rows[0].expires_at);
+  if (renew && remembered && expiresAt <= now + (REMEMBER_TTL - rememberRenewInterval) * 1000) {
+    const renewedExpiry = now + REMEMBER_TTL * 1000;
+    // Never insert on renewal: logout, recovery and email changes must win over
+    // an in-flight request. A competing refresh may already have extended it.
+    await getPool().execute('UPDATE auth_sessions SET expires_at = ? WHERE token_hash = ? AND expires_at = ? AND expires_at > ? AND remember_browser = 1',
+      [renewedExpiry, hash, expiresAt, now]);
+    [rows] = await read();
+    if (!rows.length) return null;
+    expiresAt = Number(rows[0].expires_at);
+  }
+  return { owner: { userId: 'hostinger-owner', email: owner.email },
+    cookieTtl: remembered && renew ? Math.max(1, Math.ceil((expiresAt - now) / 1000)) : null };
+}
+export async function authenticatedOwner(token, now = Date.now()) {
+  return (await authenticatedSession(token, now, false))?.owner ?? null;
 }
 export async function deleteSession(token) {
   const owner = await ownerAccount();

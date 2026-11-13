@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import PricingSettings from './pricing-settings';
+import ConnectionDiagnostics from './connection-diagnostics';
 
 type Connection = {
   connected: boolean;
@@ -136,6 +137,7 @@ export default function BillingSetup({ standalone = false }: { standalone?: bool
           {connection?.connected && <div className="disconnect"><p>Disconnecting removes the stored seller session and stops automatic job-history access.</p><button className="secondaryButton" type="button" disabled={!!busy} onClick={() => void update('disconnect')}>{busy === 'disconnect' ? 'Disconnecting…' : 'Disconnect RunningHub'}</button></div>}
         </section>
       </div>
+      {standalone && <ConnectionDiagnostics />}
       <PricingSettings />
       <Link className="textLink" href="/">← Back to the key checker</Link>
     </>

@@ -11,7 +11,7 @@ import { database, closeDatabase, getPool, migrateDatabase } from '../database.m
 import { configProblems } from '../config.mjs';
 import { passwordHash, verifyPassword, sanitizedHeaders, cookieHeader, checkLogin, createFormProtection, FORM_TTL } from '../security.mjs';
 import { beginEmailChallenge, verifyEmailChallenge, emailChallenge, resendEmailChallenge, verifyEmailChange, sendLoginCode, CODE_TTL } from '../email-auth.mjs';
-import { ownerAccount, authenticatedOwner, REMEMBER_TTL } from '../security.mjs';
+import { ownerAccount, authenticatedOwner, authenticatedSession, createSession, deleteSession, REMEMBER_TTL, SESSION_TTL } from '../security.mjs';
 import { createGatewayHandler } from '../gateway.mjs';
 
 async function listen(server) {
@@ -68,7 +68,7 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   assert.equal(sanitized['x-keymeter-client-ip'], '127.0.0.2');
   assert.equal(sanitized['cf-connecting-ip'], undefined);
   process.env.APP_URL = 'https://keys.example.test';
-  assert.match(cookieHeader('synthetic'), /__Host-keymeter-session=.*HttpOnly; SameSite=Strict.*Secure/);
+  assert.match(cookieHeader('synthetic'), /__Host-keymeter-session=.*HttpOnly; SameSite=Lax.*Secure/);
 
   const gatewayProbe = createServer();
   const gatewayPort = await listen(gatewayProbe);
@@ -92,12 +92,20 @@ test('standalone owner authentication and MySQL compatibility', async t => {
       rawHeaders: request.rawHeaders,
     }));
   };
-  const gateway = createServer(createGatewayHandler(renderer, { emailTransport }));
+  let diagnosticCalls = 0;
+  const diagnosticReport = { checkedAt: '2026-11-13T00:00:00.000Z', probes: [
+    { target: 'quota', transport: 'node-fetch', names: ['TimeoutError'], codes: ['UND_ERR_CONNECT_TIMEOUT'], elapsedMs: 10000 },
+    { target: 'quota', transport: 'native-https', status: 200, providerCode: '1602', providerName: 'HEADER_API_KEY_NOT_FOUND', elapsedMs: 200 },
+  ] };
+  const gateway = createServer(createGatewayHandler(renderer, { emailTransport,
+    connectionProbe: async (...args) => { diagnosticCalls++; assert.equal(args.length, 0); return diagnosticReport; } }));
   await new Promise(resolve => gateway.listen(gatewayPort, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => gateway.close(resolve)));
   const spoof = { 'oai-authenticated-user-id': 'hostinger-owner', 'oai-authenticated-user-email': 'owner@example.test', 'cf-connecting-ip': 'spoof',
     'x-keymeter-client-ip': 'spoof', 'x-keymeter-gateway-proof': 'spoof' };
   assert.equal((await fetch(origin + '/api/seller/billing', { headers: spoof })).status, 403);
+  assert.equal((await fetch(origin + '/api/seller/diagnostics', { method: 'POST', headers: { ...spoof, origin } })).status, 403);
+  assert.equal(diagnosticCalls, 0);
   const protectedPage = await fetch(origin + '/seller', { headers: spoof, redirect: 'manual' });
   assert.equal(protectedPage.status, 303);
   assert.equal(protectedPage.headers.get('location'), origin + '/login');
@@ -211,11 +219,27 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   const verified = await verify(pendingCookie, code);
   assert.equal(verified.status, 303);
   const cookie = verified.headers.getSetCookie().find(value => value.startsWith('keymeter-session=')).split(';')[0];
-  assert.match(verified.headers.get('set-cookie'), /HttpOnly; SameSite=Strict/);
+  assert.ok(verified.headers.getSetCookie().some(value => value.startsWith('keymeter-session=') && /HttpOnly; SameSite=Lax/.test(value)));
   assert.equal((await verify(pendingCookie, code)).status, 401, 'A consumed code must not be replayed.');
   const ownerResponse = await fetch(origin + '/api/seller/billing', { headers: { cookie } });
   assert.equal(ownerResponse.status, 200);
   assert.equal((await ownerResponse.json()).headers['oai-authenticated-user-email'], 'owner@example.test');
+  const testConnection = (options = {}) => fetch(origin + '/api/seller/diagnostics' + (options.search || ''), {
+    method: options.method || 'POST', headers: { cookie, origin, ...options.headers },
+    ...(options.body ? { body: options.body } : {}), redirect: 'manual',
+  });
+  assert.equal((await testConnection({ method: 'GET' })).status, 405);
+  assert.equal((await testConnection({ headers: { origin: 'https://evil.test' } })).status, 403);
+  assert.equal((await testConnection({ headers: { 'sec-fetch-site': 'cross-site' } })).status, 403);
+  assert.equal((await testConnection({ body: 'target=https://evil.test' })).status, 400);
+  assert.equal((await testConnection({ search: '?target=https://evil.test' })).status, 400);
+  assert.equal(diagnosticCalls, 0, 'Rejected diagnostics must not trigger outbound probes.');
+  const diagnostics = await testConnection();
+  assert.equal(diagnostics.status, 200);
+  assert.match(diagnostics.headers.get('cache-control'), /private, no-store/);
+  assert.deepEqual(await diagnostics.json(), diagnosticReport);
+  assert.equal((await testConnection()).status, 429);
+  assert.equal(diagnosticCalls, 1, 'Repeated tests need bounded backoff.');
   const stored = await getPool().execute('SELECT token_hash FROM auth_sessions');
   assert.ok(!JSON.stringify(stored).includes(cookie.split('=')[1]));
   let busyLogin;
@@ -261,6 +285,50 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   const remembered = await verifyEmailChallenge(challenge, rememberedCode, base);
   assert.equal(remembered.ttl, REMEMBER_TTL);
   assert.ok(await authenticatedOwner(remembered.token));
+  assert.equal(REMEMBER_TTL, 90 * 24 * 60 * 60);
+  const signInForm = await browserForm(origin, '/login');
+  assert.match(signInForm.html, /name="remember"[^>]*checked/);
+  const messagesBeforeRememberedVisits = delivered.length;
+  const rememberedCookie = cookieHeader(remembered.token, false, REMEMBER_TTL).split(';')[0];
+  const rememberedVisit = await fetch(origin + '/login', { headers: { cookie: rememberedCookie,
+    'sec-fetch-site': 'cross-site' }, redirect: 'manual' });
+  assert.equal(rememberedVisit.status, 303, 'An existing remembered login skips password and OTP.');
+  assert.equal(rememberedVisit.headers.get('location'), origin + '/seller');
+  assert.ok(rememberedVisit.headers.getSetCookie().some(value => {
+    const age = Number(/Max-Age=(\d+)/.exec(value)?.[1]);
+    return value.startsWith('keymeter-session=') && /SameSite=Lax/.test(value) &&
+      age <= REMEMBER_TTL && age >= REMEMBER_TTL - 60;
+  }));
+  const renderedVisit = await fetch(origin + '/seller', { headers: { cookie: rememberedCookie } });
+  assert.equal(renderedVisit.status, 200);
+  assert.ok(renderedVisit.headers.getSetCookie().some(value => value.startsWith('keymeter-session=')));
+  const settingsVisit = await fetch(origin + '/owner/email', { headers: { cookie: rememberedCookie } });
+  assert.equal(settingsVisit.status, 200);
+  assert.equal(settingsVisit.headers.getSetCookie().filter(value => value.startsWith('keymeter-session=')).length, 1);
+  assert.ok(settingsVisit.headers.getSetCookie().some(value => value.startsWith('keymeter-form=')), 'Remembered cookie must coexist with signed form protection.');
+  assert.equal(delivered.length, messagesBeforeRememberedVisits, 'Remembered visits must not send another email.');
+
+  await t.test('remembered sessions persist, renew at most daily and respect expiry and revocation', async () => {
+    const now = Date.now(), day = 24 * 60 * 60 * 1000;
+    const persistent = await createSession(REMEMBER_TTL, now - 2 * day);
+    await closeDatabase();
+    assert.ok(await authenticatedOwner(persistent, now), 'Sessions survive a process/pool restart.');
+    const renewed = await authenticatedSession(persistent, now);
+    assert.equal(renewed.cookieTtl, REMEMBER_TTL);
+    const [before] = await getPool().execute('SELECT expires_at FROM auth_sessions ORDER BY expires_at DESC');
+    assert.equal(Number(before[0].expires_at), now + REMEMBER_TTL * 1000);
+    assert.equal((await authenticatedSession(persistent, now + 3600_000)).cookieTtl, REMEMBER_TTL - 3600);
+    const [unchanged] = await getPool().execute('SELECT expires_at FROM auth_sessions ORDER BY expires_at DESC');
+    assert.equal(Number(unchanged[0].expires_at), Number(before[0].expires_at), 'Repeated visits do not rewrite expiry within a day.');
+    assert.equal((await authenticatedSession(persistent, now + day)).cookieTtl, REMEMBER_TTL);
+    assert.equal(await authenticatedSession(persistent, now + day + REMEMBER_TTL * 1000), null, 'Expired sessions cannot renew.');
+    await deleteSession(persistent);
+    assert.equal(await authenticatedSession(persistent, now + day), null, 'Logout cannot be undone by renewal.');
+    const temporary = await createSession(SESSION_TTL, now);
+    assert.equal((await authenticatedSession(temporary, now + 3600_000)).cookieTtl, null);
+    assert.equal(await authenticatedSession(temporary, now + SESSION_TTL * 1000), null, 'Unremembered sessions retain the short expiry.');
+    await deleteSession(temporary);
+  });
   await assert.rejects(verifyEmailChallenge(challenge, rememberedCode, base), error => error.status === 401);
   await getPool().execute('DELETE FROM request_limits');
   const wrongChallenge = await beginEmailChallenge(proof, '', false, capture, base);
@@ -376,6 +444,7 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   const issuedResponse = await submitForm(origin, '/login/verify', { code: setupCode }, setupPending, { page: '/login/verify', origin: null });
   assert.equal(issuedResponse.status, 200);
   assert.match(issuedResponse.headers.get('cache-control'), /no-store/);
+  assert.ok(issuedResponse.headers.getSetCookie().some(value => value.startsWith('keymeter-session=') && value.includes('Max-Age=' + REMEMBER_TTL)), 'Verified setup remembers this browser.');
   const issuedHtml = await issuedResponse.text();
   const firstKey = /id="owner-key"[^>]*>([^<]+)<\/textarea>/.exec(issuedHtml)?.[1];
   assert.equal(firstKey?.length, 64);
@@ -400,6 +469,7 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   const recoveryPending = recoveryKnown.headers.getSetCookie()[0].split(';')[0];
   const recovery = await submitForm(origin, '/forgot-key/verify', { code: latestCode() }, recoveryPending, { page: '/forgot-key/verify', origin: 'null' });
   assert.equal(recovery.status, 200);
+  assert.ok(recovery.headers.getSetCookie().some(value => value.startsWith('keymeter-session=') && value.includes('Max-Age=' + REMEMBER_TTL)), 'Verified recovery remembers the new session.');
   const recoveredHtml = await recovery.text();
   const recoveredKey = /id="owner-key"[^>]*>([^<]+)<\/textarea>/.exec(recoveredHtml)?.[1];
   assert.equal(recoveredKey?.length, 64);
@@ -459,7 +529,10 @@ test('standalone owner authentication and MySQL compatibility', async t => {
   const ownerCookie = restoredCookie;
   const setup = await fetch(productionOrigin + '/seller', { headers: { cookie: ownerCookie } });
   assert.equal(setup.status, 200);
-  assert.match(await setup.text(), /Connect your billing/);
+  const setupHtml = await setup.text();
+  assert.match(setupHtml, /Connect your billing/);
+  assert.match(setupHtml, /Test connection/);
+  assert.ok(setup.headers.getSetCookie().some(value => value.startsWith('keymeter-session=') && /SameSite=Lax/.test(value)), 'The compiled app preserves the remembered cookie from its gateway.');
   const actualStatus = await fetch(productionOrigin + '/api/seller/billing', { headers: { cookie: ownerCookie } });
   assert.equal(actualStatus.status, 200);
   assert.equal((await actualStatus.json()).connected, false);
