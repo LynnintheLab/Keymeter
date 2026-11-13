@@ -1,22 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { stripTypeScriptTypes } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
 import { Miniflare } from './worker-fixture.mjs';
 
 test('the actual Worker fetch reaches the quota endpoint and never follows redirects', async (t) => {
   const key = 'synthetic'.padEnd(32, 'x');
-  const source = await readFile(new URL('../lib/quota.ts', import.meta.url), 'utf8');
+  const { outputFiles } = await build({ stdin: { contents: `
+    import { lookup } from './lib/quota';
+    export default { async fetch(req) {
+      try { return Response.json(await lookup(await req.text())); }
+      catch (e) { return Response.json({ error: e.message }, { status: e.status || 500 }); }
+    } };
+  `, resolveDir: fileURLToPath(new URL('../', import.meta.url)) }, bundle: true, format: 'esm', write: false });
   let upstream = 'ok';
   const requests = [];
   const worker = new Miniflare({
     modules: true, compatibilityDate: '2026-05-15',
-    script: stripTypeScriptTypes(source, { mode: 'transform' }) + `
-      export default { async fetch(req) {
-        try { return Response.json(await lookup(await req.text())); }
-        catch (e) { return Response.json({ error: e.message }, { status: e.status || 500 }); }
-      } };
-    `,
+    script: outputFiles[0].text,
     outboundService(req) {
       requests.push([req.url, req.method, req.headers.get('authorization')]);
       if (upstream === 'redirect') return Response.redirect('https://other.invalid/no', 302);

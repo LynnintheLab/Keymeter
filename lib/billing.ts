@@ -1,5 +1,6 @@
 import { KEY_RE, accountKeyIdentity, readLimited } from './quota';
 import type { AccountKeyIdentity } from './quota';
+import { providerNetworkFailure } from './provider-diagnostics';
 
 export type BillingKey = { id: string; mask: string; name: string; userId: string };
 export type TaskRecord = {
@@ -67,14 +68,15 @@ async function provider(path: '/api/key/queryAllV2' | '/api/key/list' | '/api/bi
         Authorization: 'Bearer ' + connection.token, ...(connection.teamId ? { 'X-Team-Id': connection.teamId } : {}) },
       body: isTeamWallet ? undefined : JSON.stringify(body), redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(10000),
     });
-  } catch { throw unavailable(); }
+  } catch (error) { providerNetworkFailure('billing', error); throw unavailable(); }
   if (response.status === 401 || response.status === 403) throw reconnect();
   if (response.status === 429) throw new BillingError(429, 'RunningHub billing is busy. Wait a moment and retry.');
   if (!response.ok) throw unavailable();
   let envelope;
   try { envelope = JSON.parse(await readLimited(response.body, 2_000_000)); } catch { throw unavailable(); }
   if (!object(envelope)) throw unavailable();
-  if (String(envelope.code) === '412') throw reconnect();
+  if (String(envelope.code) === '412' || (String(envelope.code) === '403' &&
+      (envelope.msg === 'TOKEN_MISSION' || envelope.msg === 'TOKEN_INVALID'))) throw reconnect();
   if (String(envelope.code) !== '0') throw unavailable();
   return envelope.data;
 }

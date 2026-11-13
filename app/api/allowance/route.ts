@@ -35,6 +35,12 @@ export async function POST(request: Request) {
       ownerKey: env.RUNNINGHUB_OWNER_KEY,
       registered: env.REGISTERED_KEY_HASHES,
     });
+    // The current checker loads jobs separately. Keep older clients compatible,
+    // but never make the balance-only request wait for a seller session.
+    if (input.includeTasks === false) {
+      const history = await recordCheck(env.DB, key, result);
+      return Response.json({ ...result, history }, { headers });
+    }
     const [history, tasks] = await Promise.all([
       recordCheck(env.DB, key, result),
       readTaskHistory(env.DB, key, env.BILLING_ENCRYPTION_KEY, undefined, undefined, identity),

@@ -20,7 +20,7 @@ async function consume(db: D1Database, scope: string, actor: string, limit: numb
 }
 
 export async function limitRequest(
-  request: Request, db: D1Database | undefined, scope: 'allowance' | 'seller', actor: string, now = Date.now(),
+  request: Request, db: D1Database | undefined, scope: 'allowance' | 'usage-history' | 'seller', actor: string, now = Date.now(),
 ) {
   if (!db) throw new RequestLimitError(503, 'The checker is temporarily unavailable. Please try again.');
   const address = request.headers.get('cf-connecting-ip') || request.headers.get('x-keymeter-client-ip') || 'unknown';

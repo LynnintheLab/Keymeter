@@ -1,4 +1,6 @@
-// Only this module talks to RunningHub. No wallet endpoint, database, or logging.
+import { providerNetworkFailure } from './provider-diagnostics';
+
+// Read-only quota lookup. Never substitute the account wallet for a key limit.
 export const KEY_RE = /^[a-zA-Z0-9_-]{32,128}$/;
 const endpoint = 'https://www.runninghub.ai/openapi/v2/api-key/list';
 type Row = Record<string, unknown>;
@@ -121,19 +123,22 @@ export async function lookupAccount(
       400,
       'Enter the full key, not the masked version with stars.',
     );
-  // An operator credential can only be used for an explicitly enrolled FULL key.
-  // A four-character suffix, masked prefix, email, or display name is never authorization.
-  let credential = key;
-  if (config.ownerKey && config.registered) {
-    const digest = Array.from(
-      new Uint8Array(
-        await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key)),
-      ),
-      (n) => n.toString(16).padStart(2, '0'),
-    ).join('');
-    if (config.registered.split(/[\s,]+/).includes(digest))
-      credential = config.ownerKey;
+  // Always try the customer's own full key first. A stale optional operator
+  // credential must never block a key that can read its own allowance.
+  try { return await requestAccount(key, key, transport); }
+  catch (error) {
+    if (!(error instanceof LookupError) || ![401, 403, 422].includes(error.status)) throw error;
+    // An operator credential is a fallback only for an explicitly enrolled FULL
+    // key. A suffix, mask, email or display name is never authorization.
+    if (!config.ownerKey || !config.registered || config.ownerKey === key) throw error;
+    const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key))),
+      n => n.toString(16).padStart(2, '0')).join('');
+    if (!config.registered.split(/[\s,]+/).includes(digest)) throw error;
+    return requestAccount(key, config.ownerKey, transport);
   }
+}
+
+async function requestAccount(key: string, credential: string, transport: typeof fetch) {
   let response: Response;
   try {
     response = await transport(endpoint, {
@@ -147,10 +152,11 @@ export async function lookupAccount(
       cache: 'no-store',
       signal: AbortSignal.timeout(10000),
     });
-  } catch {
+  } catch (error) {
+    providerNetworkFailure('quota', error);
     throw new LookupError(
       503,
-      'RunningHub could not be reached. Try checking again shortly.',
+      'This server could not reach RunningHub. Seller sign-in is not required for balance checks. Please try again shortly.',
     );
   }
   if (response.status === 429)

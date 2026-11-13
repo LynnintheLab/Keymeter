@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Allowance } from '@/lib/quota';
 import type { HistoryEntry } from '@/lib/history';
 import type { PricePackage } from '@/lib/pricing';
@@ -7,7 +7,7 @@ import TopUpOffer from './top-up-offer';
 import DigimiumAd from './digimium-ad';
 
 type TaskHistory = {
-  state: 'ready' | 'not_connected' | 'not_enrolled' | 'not_found' | 'reconnect' | 'unavailable';
+  state: 'loading' | 'ready' | 'not_connected' | 'not_enrolled' | 'not_found' | 'reconnect' | 'unavailable';
   records: {
     taskId: string;
     time: string;
@@ -72,6 +72,9 @@ function TaskUsage({ result }: { result: AllowanceResult }) {
   const records = tasks?.state === 'ready' ? tasks.records : [];
   let message = '';
   switch (tasks?.state) {
+    case 'loading':
+      message = 'Loading job history…';
+      break;
     case 'ready':
       message = records.length ? '' : 'No billed jobs in the last 30 days.';
       break;
@@ -80,16 +83,16 @@ function TaskUsage({ result }: { result: AllowanceResult }) {
       message = 'Job history isn’t available for this key.';
       break;
     case 'reconnect':
-      message = 'Job history needs the seller to reconnect RunningHub.';
+      message = 'Balance checked. The seller needs to reconnect for job history.';
       break;
     case 'unavailable':
-      message = 'Job history is temporarily unavailable. Try again shortly.';
+      message = 'Balance checked. Job history is temporarily unavailable.';
       break;
     default:
-      message = 'The seller hasn’t connected job history yet.';
+      message = 'Balance checked. The seller hasn’t connected job history yet.';
   }
   return (
-    <section id="usage-history" className="keyHistory" aria-labelledby="usageTitle" tabIndex={-1}>
+    <section id="usage-history" className="keyHistory" aria-labelledby="usageTitle" aria-busy={tasks?.state === 'loading'} tabIndex={-1}>
       <div className="keySectionHeading">
         <h2 id="usageTitle">Usage history</h2>
         <span>Last 30 days · local time</span>
@@ -141,9 +144,48 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
   const [error, setError] = useState('');
   const [result, setResult] = useState<AllowanceResult | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  const activeRequest = useRef<AbortController | null>(null);
+  const requestSequence = useRef(0);
+  useEffect(() => () => {
+    requestSequence.current++;
+    activeRequest.current?.abort();
+  }, []);
+  function changeKey(value: string) {
+    requestSequence.current++;
+    activeRequest.current?.abort();
+    activeRequest.current = null;
+    setKey(value);
+    setError('');
+    setResult(null);
+    setBusy(false);
+  }
+  async function loadTasks(value: string, sequence: number, controller: AbortController) {
+    let tasks: TaskHistory;
+    try {
+      const response = await fetch('/api/usage-history', {
+        method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: value }), signal: controller.signal,
+      });
+      if (!response.ok) throw new Error('History unavailable');
+      const payload = await response.json() as TaskHistory;
+      if (!['ready', 'not_connected', 'not_enrolled', 'not_found', 'reconnect', 'unavailable'].includes(payload?.state) ||
+          !Array.isArray(payload.records) || typeof payload.hasMore !== 'boolean') throw new Error('Invalid history');
+      tasks = payload;
+    } catch {
+      if (controller.signal.aborted || sequence !== requestSequence.current) return;
+      tasks = { state: 'unavailable', records: [], hasMore: false };
+    }
+    if (controller.signal.aborted || sequence !== requestSequence.current) return;
+    setResult(current => sequence === requestSequence.current && current ? { ...current, tasks } : current);
+    if (activeRequest.current === controller) activeRequest.current = null;
+  }
   async function check(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (busy) return;
+    const sequence = ++requestSequence.current;
+    activeRequest.current?.abort();
+    const controller = new AbortController();
+    activeRequest.current = controller;
     setError('');
     setResult(null);
     const value = key.trim();
@@ -157,18 +199,25 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
     try {
       const response = await fetch('/api/allowance', {
         method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: value }),
+        body: JSON.stringify({ key: value, includeTasks: false }), signal: controller.signal,
       });
+      if (controller.signal.aborted || sequence !== requestSequence.current) return;
       if (!response.ok) {
         const payload = (await response.json()) as { error?: string };
+        if (controller.signal.aborted || sequence !== requestSequence.current) return;
         setError(payload.error || 'Unable to check this key. Try again.');
         return;
       }
-      setResult((await response.json()) as AllowanceResult);
+      const payload = await response.json() as AllowanceResult;
+      if (controller.signal.aborted || sequence !== requestSequence.current) return;
+      setResult({ ...payload, tasks: { state: 'loading', records: [], hasMore: false } });
       setKey('');
+      setBusy(false);
+      void loadTasks(value, sequence, controller);
     } catch {
-      setError('Couldn’t connect. Please try again.');
-    } finally { setBusy(false); }
+      if (!controller.signal.aborted && sequence === requestSequence.current)
+        setError('Couldn’t connect. Please try again.');
+    } finally { if (sequence === requestSequence.current) setBusy(false); }
   }
   const warning = result?.state === 'expired' ? 'Key expired' : result?.state === 'exhausted' ? 'Spending limit reached' : '';
   const fraction = result && result.limit !== null && result.remaining !== null
@@ -183,7 +232,7 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
         <div className="keyFormRow">
           <div className="inputWrap keyInputWrap">
             <KeyIcon />
-            <input id="key" ref={input} type={shown ? 'text' : 'password'} autoComplete="off" spellCheck={false} autoCapitalize="none" maxLength={128} disabled={busy} value={key} placeholder="Paste your key" aria-describedby={'keyPrivacy' + (error ? ' keyError' : '')} aria-invalid={!!error} onChange={e => { setKey(e.target.value); setError(''); setResult(null); }} />
+            <input id="key" ref={input} type={shown ? 'text' : 'password'} autoComplete="off" spellCheck={false} autoCapitalize="none" maxLength={128} disabled={busy} value={key} placeholder="Paste your key" aria-describedby={'keyPrivacy' + (error ? ' keyError' : '')} aria-invalid={!!error} onChange={e => changeKey(e.target.value)} />
             <button className="show" type="button" disabled={busy} aria-label={shown ? 'Hide API key' : 'Show API key'} aria-pressed={shown} onClick={() => setShown(!shown)}>{shown ? 'Hide' : 'Show'}</button>
           </div>
           <button className="submit keySubmit" disabled={busy} type="submit">{busy ? 'Checking…' : 'Check balance'}<span aria-hidden="true">→</span></button>
@@ -201,7 +250,7 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
           <dl className="keyMetrics"><div><dt>Limit</dt><dd>{result.limit === null ? 'Not reported' : money(result.limit)}</dd></div><div><dt>Used</dt><dd>{money(result.used)}</dd></div></dl>
           {warning && <p className="keyWarning">{warning}</p>}
         </section>
-      </> : busy ? <div className="keyLoading" role="status"><div className="keySkeleton keySkeletonShort" /><div className="keySkeleton keySkeletonLarge" /><div className="keySkeleton" /><p>Checking balance and job history…</p></div> : <div className="keyInitial"><div className="keyInitialIcon"><KeyIcon /></div><p>{error ? 'No balance available' : 'No key checked'}</p><span>{error ? 'Check your key and try again.' : 'Your allowance will appear here.'}</span></div>}
+      </> : busy ? <div className="keyLoading" role="status"><div className="keySkeleton keySkeletonShort" /><div className="keySkeleton keySkeletonLarge" /><div className="keySkeleton" /><p>Checking balance…</p></div> : <div className="keyInitial"><div className="keyInitialIcon"><KeyIcon /></div><p>{error ? 'No balance available' : 'No key checked'}</p><span>{error ? 'Check your key and try again.' : 'Your allowance will appear here.'}</span></div>}
     </div>
     </div>
     <DigimiumAd />

@@ -83,7 +83,7 @@ export default function BillingSetup({ standalone = false }: { standalone?: bool
       <section className="sellerIntro">
         <span className="smallCap">Owner controls</span>
         <h1>Connect your billing.</h1>
-        <p className="intro">Connect once so customers can check their key’s balance and the charge for each run.</p>
+        <p className="intro">Connect once for per-job charges. Customers can check their balance with their API key alone.</p>
         {standalone && <a className="textLink" href="/owner/email">Owner email &amp; security →</a>}
         <div className="connectionStatus" role="status">
           <i className={connection?.connected && !connection.reconnect && !connection.unavailable ? 'connectedDot' : ''} />
@@ -123,8 +123,8 @@ export default function BillingSetup({ standalone = false }: { standalone?: bool
         <section className="setupPanel" aria-labelledby="automaticTitle">
           <span className="smallCap">Automatic access</span>
           <h2 id="automaticTitle">All your shared keys</h2>
-          <p>Every Enterprise-Shared key in the connected account can check its balance and individual job charges. Newly created keys become available automatically.</p>
-          <p>Customers paste their full API key into the checker. Keymeter verifies the key against your connected account and shows its own records.</p>
+          <p>Balance checks need only the customer’s API key. This optional connection adds individual job charges for your current and future shared keys.</p>
+          <p>Keymeter verifies each full key against your connected account before showing its job records.</p>
           {((connection?.connected && !connection.canRenew) || connection?.reconnect) && <form onSubmit={(event) => { event.preventDefault(); void update('add-refresh'); }} autoComplete="off">
             <h3>Keep the connection active</h3>
             <p>Save <code>Rh-Refreshtoken</code> from RunningHub once. Your access token is already saved.</p>

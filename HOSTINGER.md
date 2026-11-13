@@ -90,6 +90,24 @@ Deploy later changes from the repository. Restart after changing environment set
 
 Local checks are npm run test:hostinger and npm run build:hostinger. The test suite uses synthetic credentials and local test servers. A production MySQL smoke check still requires an isolated test database; do not run integration tests against customer data.
 
+## RunningHub connection timeouts
+
+An unavailable billing connection does not mean the saved access token was deleted. Balance lookup authenticates with the customer's API key; seller sessions are used for job-history access. If RunningHub cannot be reached from the hosting server, both features can report a connection failure even when their credentials are correct.
+
+Open Hostinger's terminal in the deployed Node app directory and run:
+
+```sh
+node hostinger/diagnose-runninghub.mjs
+```
+
+If the terminal starts at the project source root while the running files are under `dist`, run `node dist/hostinger/diagnose-runninghub.mjs` instead. The build includes this utility. It needs no API key, access token, refresh token, database settings or other arguments. Do not paste credentials into the command. It makes anonymous, read-only probes to fixed RunningHub endpoints, resolves DNS, and compares Node fetch with native Node HTTPS. Each HTTP probe has a ten-second deadline and a bounded response body. Its output contains only transport/status labels, DNS addresses, elapsed time, known error codes and recognized provider error names; it does not print response bodies or environment variables.
+
+- HTTP 200 with `HEADER_API_KEY_NOT_FOUND` or `TOKEN_MISSION` is expected for these anonymous probes. It proves the endpoint answered from that server, not that a customer's key or seller token is valid.
+- `ENOTFOUND` or `EAI_AGAIN` indicates DNS resolution trouble. `UND_ERR_CONNECT_TIMEOUT`, `ETIMEDOUT`, `ENETUNREACH` or similar network labels indicate an outbound connection problem. TLS labels indicate certificate negotiation trouble. Ask Hostinger support to check outbound HTTPS access to `www.runninghub.ai:443`, including any destination-side filtering, and share the credential-free diagnostic output.
+- If both transports fail from Hostinger while the endpoint answers from another network, changing access tokens or repeatedly redeploying cannot repair that network route. Resolve the outbound issue first. If one transport answers and the other fails, share that comparison with support before changing application transport behavior.
+
+Runtime logs also record a bounded `[Keymeter provider network]` entry on quota or billing transport failures, without tokens, request bodies or raw error messages. Browser-direct fallback is not a dependable workaround: RunningHub can return duplicate CORS origin headers that browsers reject. Do not route customer keys through public CORS proxies. Keep saved encryption and session secrets unchanged while diagnosing connectivity.
+
 ## Official references
 
 - [Hostinger Node deployment](https://www.hostinger.com/support/how-to-deploy-a-nodejs-website-in-hostinger/)

@@ -4,7 +4,7 @@ This is separate from the KeyLedger customer vault. It does not import those cus
 
 ## How to check
 
-Enter a full international RunningHub Enterprise-Shared key **on the checker, not in chat**. Check allowance makes one read-only GET to https://www.runninghub.ai/openapi/v2/api-key/list from the server. Only the unique matching key’s limit, usage, remaining amount, quota/expiry state, last four characters and lookup time, recorded balance checks, and its job usage are returned. Only real results are shown after a successful check. During a lookup or after an error, the statement shows no figure. Reloading does not remember a key. The app never queries the shared wallet or calls a job. A key's quota is not a guarantee that the common wallet can fund a job.
+Enter a full international RunningHub Enterprise-Shared key **on the checker, not in chat**. Check allowance makes a read-only GET to https://www.runninghub.ai/openapi/v2/api-key/list from the server using that key. A seller access token, refresh token, billing login or saved seller connection is not required. The checked balance and saved readings appear before a separate request loads optional job history. A failed or expired billing connection cannot clear or delay a successful balance result. Only the unique matching key’s limit, usage, remaining amount, quota/expiry state, last four characters and lookup time are returned. During a balance lookup or after an error, the statement shows no figure. Reloading does not remember a key. The app never queries the shared wallet or calls a job. A key's quota is not a guarantee that the common wallet can fund a job.
 
 ## Automatic job usage
 
@@ -34,7 +34,7 @@ RunningHub documents the list route and fields quotaLimit / quotaUsed in its [AP
 
 ## Optional seller-assisted access
 
-If a customer's key cannot read the list itself but an owner credential is permitted to read the list, configure both secret runtime variables on this Site: RUNNINGHUB_OWNER_KEY (authorized owner credential) and REGISTERED_KEY_HASHES (comma-separated lowercase SHA-256 hashes of the exact sold keys, never masked keys). Otherwise leave both unset. For an enrolled key only, the server uses the owner credential and filters the response to that key. Enrollment is a read-only grant: remove its hash when a key is rotated or access should end. Do not make the owner key public, store it in code, or paste it into the customer form. This feature does not grant new permissions at RunningHub.
+If a customer's key cannot read the list itself but an owner credential is permitted to read the list, configure both secret runtime variables on this Site: RUNNINGHUB_OWNER_KEY (authorized owner credential) and REGISTERED_KEY_HASHES (comma-separated lowercase SHA-256 hashes of the exact sold keys, never masked keys). Otherwise leave both unset. The server always tries the customer key first. Only after a quota denial for an exactly enrolled key can it try the owner credential and filter the response to that key. A stale owner credential cannot block a successful direct lookup. Enrollment is a read-only grant: remove its hash when a key is rotated or access should end. Do not make the owner key public, store it in code, or paste it into the customer form. This feature does not grant new permissions at RunningHub.
 
 Generate each fingerprint locally on a Mac (zsh); the key is typed at a hidden prompt, not passed as a command argument:
 

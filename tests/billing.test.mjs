@@ -232,3 +232,13 @@ test('empty per-job currency inherits the verified batch currency without invent
   assert.throws(() => projectTasks(payload([{ ...record('2'), currency: null }]), '1', 'USD'),
     'Currency fallback must not weaken key attribution.');
 });
+
+test('specific seller missing-token business errors request reconnection without misclassifying other forbidden errors', async () => {
+  const db = { prepare() { assert.fail('A rejected seller session must not be saved.'); } };
+  for (const msg of ['TOKEN_MISSION', 'TOKEN_INVALID']) {
+    await assert.rejects(connectSeller(db, encryptionKey, sessionToken, '', async () => Response.json({ code: 403, msg })),
+      error => error.status === 401 && /Reconnect/.test(error.message));
+  }
+  await assert.rejects(connectSeller(db, encryptionKey, sessionToken, '', async () => Response.json({ code: 403, msg: 'OTHER_FORBIDDEN_REASON' })),
+    error => error.status === 502 && !/Reconnect/.test(error.message));
+});

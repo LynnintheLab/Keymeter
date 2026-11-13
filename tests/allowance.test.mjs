@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { projectAllowance, lookup } from '../lib/quota.ts';
+import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
+const { outputFiles } = await build({ entryPoints: [fileURLToPath(new URL('../lib/quota.ts', import.meta.url))],
+  bundle: true, format: 'esm', write: false });
+const { projectAllowance, lookup } = await import('data:text/javascript;base64,' + Buffer.from(outputFiles[0].text).toString('base64'));
 const key = 'abcd' + 'k'.repeat(24) + '9876',
   other = 'cdef' + 'z'.repeat(24) + '1234';
 const row = {
@@ -77,14 +81,14 @@ test('no provider call for partial or masked input; no secrets in errors', async
     (e) => e.status === 429,
   );
 });
-test('owner credential never used without full-key digest enrollment', async () => {
+test('direct key succeeds without using a stale enrolled owner credential', async () => {
   const { createHash } = await import('node:crypto');
   const cfg = {
     ownerKey: 'owner-secret-for-test',
     registered: createHash('sha256').update(key).digest('hex'),
   };
   for (const [input, expected] of [
-    [key, cfg.ownerKey],
+    [key, key],
     [other, other],
   ]) {
     const r = await lookup(input, cfg, async (url, init) => {
@@ -93,4 +97,24 @@ test('owner credential never used without full-key digest enrollment', async () 
     });
     assert.equal(r.suffix, input.slice(-4));
   }
+});
+
+test('owner fallback requires direct quota denial and exact full-key enrollment', async () => {
+  const { createHash } = await import('node:crypto');
+  const cfg = { ownerKey: 'synthetic-owner', registered: createHash('sha256').update(key).digest('hex') };
+  const credentials = [];
+  const result = await lookup(key, cfg, async (_url, init) => {
+    credentials.push(init.headers.Authorization);
+    return credentials.length === 1 ? new Response('', { status: 403 })
+      : Response.json({ code: 0, data: [row] });
+  });
+  assert.equal(result.remaining, 4.848);
+  assert.deepEqual(credentials, ['Bearer ' + key, 'Bearer ' + cfg.ownerKey]);
+  let called = 0;
+  await assert.rejects(lookup(other, cfg, async (_url, init) => {
+    called++;
+    assert.equal(init.headers.Authorization, 'Bearer ' + other);
+    return new Response('', { status: 403 });
+  }), error => error.status === 403);
+  assert.equal(called, 1);
 });
