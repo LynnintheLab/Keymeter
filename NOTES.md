@@ -8,9 +8,11 @@ Hostinger owner login now remembers a verified browser by default for 90 days an
 
 Balance lookup remains independent of the saved seller billing session. The customer UI requests balance first and job history separately. The speedometer, Digimium advertisement, pricing, and contact popup are preserved.
 
-The public Hostinger site was observed timing out on RunningHub calls after about ten seconds while anonymous local probes answered. That outbound route is not proven repaired. The seller panel now offers an owner-only Connection test that runs fixed anonymous DNS, Node fetch, and native HTTPS probes on the actual server and copies a safe report. Local browser access still reported disabled, so live admin browser verification could not be completed.
+The user deployed the connection-test update and supplied a 2026-11-13 14:06:59 local-time screenshot: both quota and billing probes time out at ten seconds using Node fetch and native HTTPS. DNS UI says Completed but does not show resolved addresses. Anonymous local probes previously answered. The actual Hostinger outbound route is not repaired. The seller panel now offers an owner-only Connection test that runs fixed anonymous DNS, Node fetch, and native HTTPS probes on the actual server and copies a safe report. Local browser access still reported disabled, so live admin browser verification could not be completed.
 
 ## Last thing done
+
+- Added TROUBLESHOOTING-HANDOFF.md with the exact production diagnostic results, repo/release links, hosting settings, source map, verification limits, safe investigation commands and a prompt for another AI. No credentials are included.
 
 - Made Keep me signed in selected by default and added guarded, daily renewal for remembered sessions. Passwords and email codes are not saved in the browser.
 - Used an HttpOnly, Secure-on-HTTPS, SameSite=Lax session cookie so top-level links from email retain login. Signed form proofs and strict same-origin checks remain required for owner mutations.
