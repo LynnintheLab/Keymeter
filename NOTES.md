@@ -4,6 +4,8 @@ Updated: 2026-11-13
 
 ## Current status
 
+The approved four-slide Digimium advertisement is now integrated into the customer's Check balance flow. A real lookup starts immediately in the background, and the visible **Skip ad** button closes the advertisement immediately. The popup uses the store's white/blue theme and the owner's revised Burmese copy; the existing sidebar ad and API packages remain in place.
+
 Resolved. The outage was an outbound network fault, not a credential, token, database or application-logic problem.
 
 RunningHub is served by Tencent EdgeOne, whose DNS answers differently depending on who asks. Measured on the Hostinger server on 2026-11-13: the address its resolver returns, 43.174.196.235, silently drops every packet (TCP 443 `ETIMEDOUT` at 6 s), while the sibling node 43.174.197.235, serving the same hostname, opens port 443 in 0.03 s and completes a verified TLSv1.3 handshake in 0.05 s. Outbound HTTPS was never blocked: the provider apex answered in 0.77 s, `api.resend.com` in 0.29 s and a network trace in 0.03 s, reporting egress 2a02:4780:6:1859:0:3a3f:5f0a:1 at CGK. There is no AAAA record for the provider, so IPv6 was never involved.
@@ -18,6 +20,8 @@ The Connection test deliberately measures the unassisted route, so its Balance A
 
 ## Last thing done
 
+- Integrated the approved ad as a native React dialog with self-hosted artwork and fonts. Skip ad, Escape and backdrop dismissal keep the ongoing balance request intact; previous/next arrows and Pause control the slideshow. The additional Close button appears on slide 2 or after a store-link click.
+- Checked desktop, mobile and narrow-mobile layouts, repeated submissions, input focus after dismissal, store links, reduced-motion behavior, autoplay/pause and provider-error results. The existing 43 application tests and 25 Hostinger tests pass; TypeScript and the Hostinger build pass. Targeted lint has only the two advisory native-image warnings.
 - Added `hostinger/provider-fetch.mjs`, a routed transport for `https://www.runninghub.ai/` only, installed at startup by `server.mjs`. Every other destination keeps the platform fetch.
 - Gave each candidate address its own HTTPS agent. Node's shared pool keys sockets by host and port alone, so a pooled connection was being reused regardless of the pinned address, which made an early version appear to work against a blackhole address and against a host presenting the wrong certificate.
 - Fixed the custom DNS lookup to answer `options.all` with an array, which Node requires when happy-eyeballs is enabled. Without it every attempt failed `ERR_INVALID_IP_ADDRESS`.
@@ -27,6 +31,7 @@ The Connection test deliberately measures the unassisted route, so its Balance A
 
 ## Next steps
 
+- After Hostinger deploys the GitHub update, test a real key on the live website: the ad should open during lookup, Skip ad should close it immediately, and the real balance should remain available. Local browser checks used synthetic keys and intercepted responses.
 - Report the failing edge address 43.174.196.235 and the egress address 2a02:4780:6:1859:0:3a3f:5f0a:1 to RunningHub. Every customer routed to that node is affected, and a fix on their side is the real resolution.
 - Watch the Connection test's `TCP 443` row for 43.174.196.235. When it connects, remove the routing in `hostinger/provider-fetch.mjs` and its installation in `server.mjs`.
 - If the fixed addresses in `FALLBACK_ADDRESSES` ever stop serving the hostname, the resolver's own answers still apply; update the list from a fresh `node hostinger/diagnose-runninghub.mjs` rather than guessing.
@@ -58,3 +63,12 @@ The Connection test deliberately measures the unassisted route, so its Balance A
 - Current status: the isolated popup preview has a clear “ကြော်ငြာ · Ad” label, an explicit “Next slide →” button and a persistent Digimium store link. At the owner's request, Close appears on reaching slide 2 or clicking a store link; it remains visible when going back and resets when reopening.
 - Last thing done: reused the player's native navigation, subscribed to slide changes, and handled the iframe store CTA through the parent click gesture so its sandbox does not block the store tab. The destination stays fixed with no key or customer data attached. Desktop, mobile and narrow-mobile browser checks cover navigation, Close visibility, reset and store-link handling.
 - Next steps: owner reviews the popup interaction before production integration. The live checker remains unchanged.
+
+### Approved production integration (2026-11-13)
+
+- Current status: the owner approved integration and requested a GitHub push. The customer sees **Skip ad** instead of a text “Next slide” button; it dismisses immediately, while separate arrow buttons browse the four slides.
+- Last thing done: added `app/digimium-slideshow.tsx` and its scoped CSS, integrated it into `app/checker.tsx`, copied the approved clean Photoshop/Lightroom SVGs and Manrope fonts, and documented the production behavior. Each check mounts a fresh slideshow, so its slide and Close visibility reset without stale content. Native-dialog focus restoration preserves users who immediately start entering another key.
+- The dialog clearly says “ကြော်ငြာ · Ad”. Close also appears after reaching slide 2 or clicking a store link. Store destinations are fixed to `https://buywith-digimium.store/`, open separately, and include no API key or customer information.
+- Six-second automatic progression stops during slide interaction, hidden tabs or reduced-motion preferences; manual navigation pauses autoplay. The balance fetch and job-history fetch retain their existing behavior and do not wait for ad completion.
+- Validation: production build, TypeScript, 43 application tests and 25 Hostinger tests passed. Headless Chrome checks cover 1440px, 390px and 320px viewports, Skip/Close/Escape, repeated checks, store-link unlocking, pending/success/error results, keyboard navigation, autoplay and Pause. No new lint errors; two native `<img>` advisory warnings are accepted for the small self-hosted SVG/PNG artwork.
+- Next steps: verify the deployed popup with a real customer key after Hostinger finishes deployment. The isolated HyperFrames authoring preview remains available under `previews/digimium-slideshow/`; it is not the production runtime.

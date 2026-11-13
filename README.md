@@ -12,6 +12,8 @@ Keymeter is a customer-facing balance and billing checker for RunningHub Enterpr
 
 The checker also features a Digimium store advertisement linking to [buywith-digimium.store](https://buywith-digimium.store/). It appears beside the checker on desktop, with the API packages below the checker and usage history. On mobile, the advertisement and prices stack below the balance area.
 
+Each valid **Check balance** submission also opens a four-slide Digimium advertisement while the real lookup runs in the background. **Skip ad** dismisses it immediately; it never advances a slide or cancels the lookup. Previous/next arrows, a slide counter and pause control let visitors browse the ad. The additional Close control appears on slide 2 or after a store-link click. Escape and backdrop dismissal also work. Slides stop advancing for reduced-motion preferences, hidden tabs and interaction with the slide. Store links never include a customer's API key.
+
 The checker is responsive on mobile and desktop. Keymeter uses the submitted key for the read-only lookup and stores a one-way fingerprint with its balance history.
 
 ## Seller dashboard

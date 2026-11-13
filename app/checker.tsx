@@ -5,6 +5,7 @@ import type { HistoryEntry } from '@/lib/history';
 import type { PricePackage } from '@/lib/pricing';
 import TopUpOffer from './top-up-offer';
 import DigimiumAd from './digimium-ad';
+import DigimiumSlideshow from './digimium-slideshow';
 
 type TaskHistory = {
   state: 'loading' | 'ready' | 'not_connected' | 'not_enrolled' | 'not_found' | 'reconnect' | 'unavailable';
@@ -143,7 +144,10 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<AllowanceResult | null>(null);
+  const [adOpen, setAdOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const submit = useRef<HTMLButtonElement>(null);
+  const resultArea = useRef<HTMLDivElement>(null);
   const activeRequest = useRef<AbortController | null>(null);
   const requestSequence = useRef(0);
   useEffect(() => () => {
@@ -196,6 +200,8 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
     }
     setBusy(true);
     setShown(false);
+    // The lookup starts now; viewing or dismissing the ad never gates its request.
+    setAdOpen(true);
     try {
       const response = await fetch('/api/allowance', {
         method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
@@ -235,13 +241,13 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
             <input id="key" ref={input} type={shown ? 'text' : 'password'} autoComplete="off" spellCheck={false} autoCapitalize="none" maxLength={128} disabled={busy} value={key} placeholder="Paste your key" aria-describedby={'keyPrivacy' + (error ? ' keyError' : '')} aria-invalid={!!error} onChange={e => changeKey(e.target.value)} />
             <button className="show" type="button" disabled={busy} aria-label={shown ? 'Hide API key' : 'Show API key'} aria-pressed={shown} onClick={() => setShown(!shown)}>{shown ? 'Hide' : 'Show'}</button>
           </div>
-          <button className="submit keySubmit" disabled={busy} type="submit">{busy ? 'Checking…' : 'Check balance'}<span aria-hidden="true">→</span></button>
+          <button ref={submit} className="submit keySubmit" disabled={busy} type="submit">{busy ? 'Checking…' : 'Check balance'}<span aria-hidden="true">→</span></button>
         </div>
         {error && <p className="error keyError" role="alert" id="keyError">{error}</p>}
         <p id="keyPrivacy" className="keyPrivacy"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="4.5" y="8" width="11" height="9" rx="2" /><path d="M7 8V5.5a3 3 0 0 1 6 0V8" /></svg>Read-only · your key isn’t saved</p>
       </form>
     </div>
-    <div className="keyResultArea" aria-busy={busy} aria-live="polite">
+    <div ref={resultArea} className="keyResultArea" aria-busy={busy} aria-live="polite" tabIndex={-1}>
       {result ? <>
         <section className="keyBalancePanel" aria-labelledby="remainingTitle">
           <div className="keyBalanceMeta"><span>Key ····{result.suffix}</span><span className="keyChecked"><i aria-hidden="true" />Checked {localTime.format(new Date(result.checkedAt))}</span></div>
@@ -256,5 +262,13 @@ export default function Checker({ initialPackages }: { initialPackages: PricePac
     <DigimiumAd />
     {result && <div className="keyHistoryArea"><TaskUsage result={result} /><BalanceChecks result={result} /></div>}
     <TopUpOffer initialPackages={initialPackages} />
+    {adOpen && <DigimiumSlideshow onDismiss={restoreFocus => {
+      setAdOpen(false);
+      // Native dialogs restore focus before dispatching close. Preserve any
+      // subsequent interaction, such as entering another key immediately.
+      if (!restoreFocus) return;
+      if (submit.current && !submit.current.disabled) submit.current.focus();
+      else resultArea.current?.focus();
+    }} />}
   </section>;
 }

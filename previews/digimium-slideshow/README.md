@@ -1,7 +1,11 @@
 # Digimium ad slideshow — approval preview
 
 Four short Burmese slides for a proposed Keymeter post-check advertisement.
-This folder is isolated: the checker does not import it and its Check button is unchanged.
+This folder preserves the original authoring/approval preview. Following approval,
+the production checker renders the same four slides as a responsive native React
+dialog in `app/digimium-slideshow.tsx`. Its prominent **Skip ad** button dismisses
+the ad immediately while the balance lookup continues. The preview controls below
+describe the retained authoring player, not the production dialog.
 
 ## Review
 
@@ -34,16 +38,16 @@ clean Adobe SVG artwork instead of the older images with baked-in white corners.
 See `COPY.md` for verified source links and claim constraints.
 No price comparison, discount, stock guarantee or named payment service is implied.
 
-## Proposed integration, after approval
+## Production integration
 
 - Start the real balance lookup when Check is pressed; run it behind the ad.
-- Show this slideshow in a responsive dialog using the owner's preview behavior: Close becomes visible on slide 2 or after a store-link click.
-- Allow manual navigation and, if approved, gentle timed advances with a pause control.
+- Show the approved visuals in a responsive native dialog: Skip ad is always available, and the additional Close button becomes visible on slide 2 or after a store-link click.
+- Support manual navigation and six-second timed advances with a pause control. Manual navigation pauses automatic advancement.
 - Never delay or gate the result behind a countdown or advertisement click.
 - Every store CTA opens `https://buywith-digimium.store/`; it never receives a customer's API key.
 - Respect reduced-motion preferences and pause hidden-page motion.
 
-No automatic popup, ad frequency rule or production integration is included in this preview.
+The production popup opens on valid Check submissions. This authoring page remains independently runnable.
 
 ## Checks
 
