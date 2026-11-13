@@ -13,6 +13,11 @@ arrow keys or swipe. The built-in Present button opens presenter/audience mode.
 `review.jpg` is an overview; the `stills` folder contains a full-size still of every slide.
 All fonts, images and playback scripts are local. The mobile preview uses a portrait layout with the same copy and artwork; regenerate it with `npm run prepare:mobile` after editing the desktop source.
 
+The design follows the store's white background, dark text and blue `#1f45b8`
+accent, using Manrope and Walone Myanmar. Product logos are shown directly with
+their names, without extra tiles, frames or shadows. Photoshop and Lightroom use
+clean Adobe SVG artwork instead of the older images with baked-in white corners.
+
 ## Content
 
 1. Apps in one place: ChatGPT, Gemini, Adobe, Netflix and Spotify.
@@ -46,7 +51,17 @@ No automatic popup, ad frequency rule or production integration is included in t
 `vendor/gsap.min.js`: GSAP 3.14.2; its upstream license notice is retained in the file.
 Brand artwork and Walone Myanmar font are copied from the existing project assets;
 their original source references remain in `../../public/digimium/README.md`.
+Manrope font files and the theme reference come from the
+[Digimium store production source](https://github.com/LynnintheLab/digimium_website_final/tree/production).
+Adobe artwork: [Photoshop](https://www.adobe.com/cc-shared/assets/img/product-icons/svg/photoshop-40.svg)
+and [Lightroom](https://www.adobe.com/cc-shared/assets/img/product-icons/svg/lightroom.svg).
 
 ## Validation result
 
-Both desktop and portrait compositions pass static, runtime, layout and WCAG text-contrast checks at all five slide hold points. Four authoring warnings remain: repeated brand artwork and composition file length. They were reviewed against the rendered stills; all logos appear correctly. This preview uses large headings and the existing Myanmar font intentionally. The desktop browser controller was unavailable, so manual browser interaction was not claimed as verified.
+Both desktop and portrait compositions pass runtime and layout checks at all five
+slide hold points, with 56/56 WCAG AA text-contrast checks passing in each layout.
+Static checks report no errors and four reviewed authoring warnings for reused
+brand artwork and composition file length. Rendered desktop and portrait stills
+were visually reviewed. Headless Chrome also verifies slide navigation, Close and
+reopen controls, and no horizontal page overflow at desktop and mobile sizes.
+Explicit slide start/end times support the standalone preview player.

@@ -12,8 +12,8 @@
       }
       body {
         margin: 0;
-        background: #050505;
-        color: #fff;
+        background: #f2f5fc;
+        color: #101113;
         font:
           15px/1.6 system-ui,
           sans-serif;
@@ -32,7 +32,7 @@
         font-weight: 550;
       }
       header span {
-        color: #a7a7ad;
+        color: #505b75;
       }
       .preview {
         max-width: 1180px;
@@ -42,37 +42,38 @@
       dialog {
         width: min(1180px, calc(100vw - 32px), calc((100dvh - 150px) * 1.777778));
         max-width: 1180px;
-        border: 1px solid #343434;
+        border: 0;
         border-radius: 22px;
         padding: 0;
         overflow: hidden;
-        background: #0b0b0b;
-        color: #fff;
+        background: #fff;
+        color: #101113;
         box-shadow: 0 32px 150px #0009;
       }
       dialog::backdrop {
-        background: #000b;
+        background: #17213a80;
       }
       .dialog-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 14px 20px;
-        border-bottom: 1px solid #252525;
+        border-bottom: 1px solid #d8deed;
         font:
           13px/1.5 system-ui,
           sans-serif;
-        color: #c6c6cc;
+        color: #505b75;
       }
       button {
         font: inherit;
         cursor: pointer;
-        background: #171717;
-        border: 1px solid #444;
-        color: #fff;
+        background: #1f45b8;
+        border: 1px solid #1f45b8;
+        color: #101113;
         padding: 9px 14px;
         border-radius: 9px;
       }
+      button { color: #fff; }
       .close {
         display: flex;
         align-items: center;
@@ -83,11 +84,11 @@
         height: 17px;
       }
       button:hover {
-        background: #282828;
+        background: #123499;
       }
       button:focus-visible,
       a:focus-visible {
-        outline: 2px solid #fff;
+        outline: 2px solid #1f45b8;
         outline-offset: 4px;
       }
       hyperframes-slideshow {
@@ -107,7 +108,7 @@
         max-width: 860px;
         margin: 30px auto;
         padding: 0 24px;
-        color: #aaa;
+        color: #505b75;
         text-align: center;
         font-size: 14px;
       }
@@ -116,7 +117,7 @@
         margin: 45px auto;
       }
       .muted {
-        color: #aaa;
+        color: #505b75;
       }
       .intro {
         max-width: 620px;
@@ -130,22 +131,42 @@
         letter-spacing: -0.04em;
       }
       .intro p {
-        color: #aaa;
+        color: #505b75;
       }
       #deck-title {
-        color: #fff;
+        color: #101113;
       }
       a {
-        color: #fff;
+        color: #101113;
+      }
+      [data-hf-nav-cluster] {
+        bottom: -56px !important;
+        right: 20px !important;
+        background: #fff !important;
+        border: 1px solid #d8deed !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+      }
+      [data-hf-nav-cluster] button,
+      [data-hf-counter] {
+        color: #1f45b8 !important;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
       }
       .dialog-bottom {
-        padding: 15px 20px;
+        min-height: 70px;
+        padding: 21px 20px;
         font-size: 14px;
-        color: #b7b7bf;
+        color: #505b75;
         display: flex;
         justify-content: space-between;
         gap: 16px;
-        border-top: 1px solid #252525;
+        border-top: 1px solid #d8deed;
       }
       @media (max-width: 600px) {
         header span {
@@ -164,8 +185,10 @@
         .dialog-top {
           padding: 12px;
         }
+        [data-hf-nav-cluster] { right: 8px !important; }
         .dialog-bottom {
-          padding: 12px;
+          min-height: 70px;
+          padding: 23px 12px;
           font-size: 14px;
         }
         .dialog-bottom span:last-child {
@@ -219,37 +242,46 @@
           src="composition/index.html"
         ></hyperframes-player>
         <script type="application/hyperframes-slideshow+json">
-          {
-            "slides": [
-              {
-                "sceneId": "root",
-                "endTime": 6,
-                "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."
-              },
-              {
-                "sceneId": "choices",
-                "notes": "Variety of choices. Approval preview. Current availability and payment instructions are confirmed with Digimium."
-              },
-              {
-                "sceneId": "easy-order",
-                "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."
-              },
-              {
-                "sceneId": "easy-payment",
-                "notes": "Payment guidance. Approval preview. Current availability and payment instructions are confirmed with Digimium."
-              },
-              {
-                "sceneId": "fair-price",
-                "notes": "Fair pricing and store link. Approval preview. Current availability and payment instructions are confirmed with Digimium."
-              }
-            ],
-            "slideSequences": []
-          }
-        </script></hyperframes-slideshow
+{
+  "slides": [
+    {
+      "sceneId": "root",
+      "endTime": 6,
+      "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "startTime": 0
+    },
+    {
+      "sceneId": "choices",
+      "notes": "Variety of choices. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "startTime": 6,
+      "endTime": 12
+    },
+    {
+      "sceneId": "easy-order",
+      "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "startTime": 12,
+      "endTime": 18
+    },
+    {
+      "sceneId": "easy-payment",
+      "notes": "Payment guidance. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "startTime": 18,
+      "endTime": 24
+    },
+    {
+      "sceneId": "fair-price",
+      "notes": "Fair pricing and store link. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "startTime": 24,
+      "endTime": 30
+    }
+  ],
+  "slideSequences": []
+}
+</script></hyperframes-slideshow
       >
       <div class="dialog-bottom">
-        <span>Use ← → or swipe to review</span
-        ><span>Preview only · No changes to balance checks</span>
+        <span>Use ← → or swipe</span
+        ><span class="sr-only">Preview only</span>
       </div>
     </dialog>
     <script>

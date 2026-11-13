@@ -40,3 +40,9 @@ The Connection test deliberately measures the unassisted route, so its Balance A
 - Static/runtime/layout/text-contrast checks passed at all five slide positions for both layouts. Reused brand artwork and the single-file deck length are reviewed authoring warnings. The browser controller is disabled; manual navigation is not claimed as browser-tested.
 - The checker, Check button, authentication, billing connection, routing fix and production app behavior are unchanged by this preview. Awaiting owner approval before integrating an immediately closeable ad popup.
 - Next: review the five slides and wording; after approval, connect the popup to Check while the real lookup continues in the background.
+
+### White store-theme revision (2026-11-13)
+
+- Current status: the isolated five-slide approval preview now matches the store's white background, dark text, blue accent and Manrope/Walone typography. Product names sit beside clean native logos; the extra logo tiles and decorative framing are removed. Photoshop and Lightroom now use Adobe SVGs without baked-in white corners.
+- Last thing done: simplified all five desktop/portrait slides, refreshed the review images, and restyled the preview dialog. Added explicit slide timing so the standalone player loads its navigation correctly. Both layouts pass runtime/layout checks and 56/56 text-contrast checks each; headless Chrome verifies navigation, Close/reopen and no horizontal overflow at desktop/mobile sizes.
+- Next steps: owner reviews this revised preview. Production integration remains pending approval; the live checker and Check button are unchanged.
