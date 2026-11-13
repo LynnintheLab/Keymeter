@@ -7,9 +7,15 @@
     <script src="vendor/hyperframes-player.global.js"></script>
     <script src="vendor/hyperframes-slideshow.global.js"></script>
     <style>
+      @font-face {
+        font-family: Walone;
+        src: url("composition/assets/walone-regular.woff2") format("woff2");
+        font-display: swap;
+      }
       * {
         box-sizing: border-box;
       }
+      [hidden] { display: none !important; }
       body {
         margin: 0;
         background: #f2f5fc;
@@ -64,6 +70,17 @@
           sans-serif;
         color: #505b75;
       }
+      .ad-heading { display: flex; align-items: center; gap: 12px; }
+      .ad-label {
+        font: 600 13px/1.8 system-ui, Walone, sans-serif;
+        color: #1f45b8;
+        background: #edf2ff;
+        border: 1px solid #cbd6f4;
+        border-radius: 6px;
+        padding: 3px 9px;
+        white-space: nowrap;
+      }
+      .close-slot { min-width: 98px; min-height: 40px; display: flex; justify-content: flex-end; }
       button {
         font: inherit;
         cursor: pointer;
@@ -140,7 +157,7 @@
         color: #101113;
       }
       [data-hf-nav-cluster] {
-        bottom: -56px !important;
+        bottom: -64px !important;
         right: 20px !important;
         background: #fff !important;
         border: 1px solid #d8deed !important;
@@ -151,6 +168,19 @@
       [data-hf-counter] {
         color: #1f45b8 !important;
       }
+      [data-hf-nav-cluster] [data-hf-next] {
+        width: auto !important;
+        height: 40px !important;
+        padding: 0 15px !important;
+        border-radius: 8px !important;
+        background: #1f45b8 !important;
+        color: #fff !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        white-space: nowrap;
+      }
+      [data-hf-nav-cluster] [data-hf-next]:hover { background: #123499 !important; }
+      .store-link { color: #1f45b8; font-weight: 600; text-underline-offset: 4px; }
       .sr-only {
         position: absolute;
         width: 1px;
@@ -159,11 +189,12 @@
         clip-path: inset(50%);
       }
       .dialog-bottom {
-        min-height: 70px;
-        padding: 21px 20px;
+        min-height: 84px;
+        padding: 26px 20px;
         font-size: 14px;
         color: #505b75;
         display: flex;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 16px;
         border-top: 1px solid #d8deed;
@@ -179,20 +210,26 @@
           padding: 0;
         }
         dialog {
-          width: min(calc(100vw - 16px), calc((100dvh - 130px) * 0.6));
+          width: min(calc(100vw - 16px), calc((100dvh - 216px) * 0.6));
+          max-height: calc(100dvh - 16px);
           border-radius: 14px;
         }
         .dialog-top {
           padding: 12px;
         }
-        [data-hf-nav-cluster] { right: 8px !important; }
-        .dialog-bottom {
-          min-height: 70px;
-          padding: 23px 12px;
-          font-size: 14px;
+        .ad-heading { gap: 8px; }
+        [data-hf-nav-cluster] {
+          bottom: -108px !important;
+          left: 12px !important;
+          right: 12px !important;
+          justify-content: flex-end !important;
+          border-radius: 10px !important;
         }
-        .dialog-bottom span:last-child {
-          display: none;
+        [data-hf-counter] { margin-right: auto; }
+        .dialog-bottom {
+          min-height: 126px;
+          padding: 14px 12px;
+          font-size: 14px;
         }
         hyperframes-slideshow {
           aspect-ratio: 3/5;
@@ -222,8 +259,8 @@
     </main>
     <dialog id="review-dialog" aria-labelledby="deck-title">
       <div class="dialog-top">
-        <span id="deck-title">Digimium advertisement</span
-        ><button class="close" id="close-deck" aria-label="Close slideshow">
+        <div class="ad-heading"><span class="ad-label">ကြော်ငြာ · Ad</span><span id="deck-title">Digimium</span></div>
+        <div class="close-slot"><button class="close" id="close-deck" aria-label="Close slideshow" hidden>
           Close<svg
             viewBox="0 0 24 24"
             fill="none"
@@ -232,7 +269,7 @@
           >
             <path d="m6 6 12 12M18 6 6 18" />
           </svg>
-        </button>
+        </button></div>
       </div>
       <hyperframes-slideshow
         tabindex="0"
@@ -274,8 +311,8 @@
 </script></hyperframes-slideshow
       >
       <div class="dialog-bottom">
-        <span>Use ← → or swipe</span
-        ><span class="sr-only">Preview only</span>
+        <a class="store-link" id="visit-store" href="https://buywith-digimium.store/" target="_blank" rel="noopener noreferrer">Visit Digimium ↗</a>
+        <span class="sr-only" id="close-status" role="status"></span>
       </div>
     </dialog>
     <script>
@@ -283,13 +320,66 @@
       if (window.matchMedia('(max-width: 600px)').matches) player.setAttribute('src', 'composition-mobile/index.html');
       const dialog = document.getElementById("review-dialog");
       const open = document.getElementById("open-deck");
+      const close = document.getElementById("close-deck");
+      const deck = document.querySelector("hyperframes-slideshow");
+      const storeURL = "https://buywith-digimium.store/";
+      let closeAvailable = false;
+      let controller = null;
+      let offChange = null;
+      const linkedFrames = new WeakSet();
+
+      function revealClose() {
+        if (closeAvailable) return;
+        closeAvailable = true;
+        close.hidden = false;
+        document.getElementById("close-status").textContent = "Close button is now available.";
+      }
+      function syncAccess() {
+        if (deck.controller?.position.slideIndex >= 1) revealClose();
+      }
+      function visitFromSlide(event) {
+        const link = event.target.closest?.("a[href]");
+        if (!link || new URL(link.href).origin !== new URL(storeURL).origin) return;
+        event.preventDefault();
+        revealClose();
+        // Parent gesture avoids the preview iframe's popup sandbox restriction.
+        window.open(storeURL, "_blank", "noopener,noreferrer");
+      }
+      function wireStoreLink() {
+        const frame = player.iframeElement;
+        if (!frame) return;
+        if (!linkedFrames.has(frame)) {
+          linkedFrames.add(frame);
+          frame.addEventListener("load", wireStoreLink);
+        }
+        const doc = frame.contentDocument;
+        // Re-register after iframe document replacement; the DOM deduplicates this callback.
+        doc?.addEventListener("click", visitFromSlide, true);
+      }
+      function syncController() {
+        const next = deck.querySelector("[data-hf-next]");
+        if (next && next.textContent !== "Next slide →") next.textContent = "Next slide →";
+        if (deck.controller && deck.controller !== controller) {
+          offChange?.();
+          controller = deck.controller;
+          offChange = controller.onChange(syncAccess);
+        }
+        syncAccess();
+        wireStoreLink();
+      }
+      new MutationObserver(syncController).observe(deck, { childList: true, subtree: true });
+      player.addEventListener("ready", syncController);
+      document.getElementById("visit-store").addEventListener("click", revealClose);
       function show() {
+        closeAvailable = false;
+        close.hidden = true;
+        document.getElementById("close-status").textContent = "";
+        deck.controller?.goToSlide?.(0);
         dialog.showModal();
+        syncController();
       }
       open.addEventListener("click", show);
-      document
-        .getElementById("close-deck")
-        .addEventListener("click", () => dialog.close());
+      close.addEventListener("click", () => dialog.close());
       dialog.addEventListener("click", (e) => {
         if (e.target === dialog) {
           const box = dialog.getBoundingClientRect();

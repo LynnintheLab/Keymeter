@@ -52,3 +52,9 @@ The Connection test deliberately measures the unassisted route, so its Balance A
 - Current status: removed the former category-only slide 2. Four slides remain; the former slides 3 and 4 are now slides 2 and 3.
 - Last thing done: applied the owner's exact ordering headline and payment/plan/usage support text, aligned the Telegram illustration, renumbered the deck and adjusted its timing to 24 seconds. Refreshed desktop/portrait stills and the review overview. Both layouts pass runtime/layout checks and 45/45 text-contrast checks each; browser checks confirm all four slides, Close/reopen and no page overflow.
 - Next steps: owner reviews the updated copy in the isolated preview. Integrate into the checker only after approval.
+
+### Ad navigation controls (2026-11-13)
+
+- Current status: the isolated popup preview has a clear “ကြော်ငြာ · Ad” label, an explicit “Next slide →” button and a persistent Digimium store link. At the owner's request, Close appears on reaching slide 2 or clicking a store link; it remains visible when going back and resets when reopening.
+- Last thing done: reused the player's native navigation, subscribed to slide changes, and handled the iframe store CTA through the parent click gesture so its sandbox does not block the store tab. The destination stays fixed with no key or customer data attached. Desktop, mobile and narrow-mobile browser checks cover navigation, Close visibility, reset and store-link handling.
+- Next steps: owner reviews the popup interaction before production integration. The live checker remains unchanged.

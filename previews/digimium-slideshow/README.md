@@ -10,6 +10,12 @@ The root page is a popup-sized approval preview. Use the previous/next controls,
 arrow keys or swipe. The built-in Present button opens presenter/audience mode.
 `npm run present` serves the raw composition with the HyperFrames presentation UI.
 
+The popup is labeled **ကြော်ငြာ · Ad** and has a visible **Next slide →** button.
+The Close button appears when slide 2 is reached or a Digimium store link is
+clicked, whichever happens first. Going back preserves that button for the
+current opening; reopening restarts on slide 1. The browser's Escape and backdrop
+dismissal remain available. A store link is visible below every slide.
+
 `review.jpg` is an overview; the `stills` folder contains a full-size still of every slide.
 All fonts, images and playback scripts are local. The mobile preview uses a portrait layout with the same copy and artwork; regenerate it with `npm run prepare:mobile` after editing the desktop source.
 
@@ -31,7 +37,7 @@ No price comparison, discount, stock guarantee or named payment service is impli
 ## Proposed integration, after approval
 
 - Start the real balance lookup when Check is pressed; run it behind the ad.
-- Show this slideshow in a responsive dialog, with an immediately available Close/View balance action.
+- Show this slideshow in a responsive dialog using the owner's preview behavior: Close becomes visible on slide 2 or after a store-link click.
 - Allow manual navigation and, if approved, gentle timed advances with a pause control.
 - Never delay or gate the result behind a countdown or advertisement click.
 - Every store CTA opens `https://buywith-digimium.store/`; it never receives a customer's API key.
@@ -64,3 +70,7 @@ brand artwork and composition file length. Rendered desktop and portrait stills
 were visually reviewed. Headless Chrome also verifies slide navigation, Close and
 reopen controls, and no horizontal page overflow at desktop and mobile sizes.
 Explicit slide start/end times support the standalone preview player.
+The control revision is also browser-checked at desktop, mobile and narrow-mobile
+sizes, including Close visibility, reopening, native Next navigation and the fixed
+store destination. Store navigation inside the sandboxed preview iframe is handled
+by its parent in the click gesture; no customer data is appended to the link.
