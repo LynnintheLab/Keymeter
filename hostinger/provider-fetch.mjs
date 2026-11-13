@@ -17,14 +17,19 @@ const PROVIDER_HOST = 'www.runninghub.ai';
 // so SNI, the Host header and certificate verification are unchanged, and a
 // node presenting an invalid certificate fails instead of receiving anything.
 const FALLBACK_ADDRESSES = Object.freeze(['43.174.197.235', '43.174.196.235']);
-const CONNECT_TIMEOUT_MS = 4_000;
+// The reachable node connects in about 30 ms from this host, so a short
+// deadline is generous and bounds what one unreachable candidate can cost.
+const CONNECT_TIMEOUT_MS = 2_500;
 const ROUTE_TTL_MS = 600_000;
 const RESOLVE_TTL_MS = 60_000;
-// Longer than ROUTE_TTL_MS on purpose: when the remembered route expires, the
-// node known to be unreachable must still be ordered last. It is deprioritised
-// rather than skipped, so a repaired node is picked up again once this expires.
-const FAILURE_TTL_MS = 900_000;
-const MAX_CANDIDATES = 4;
+// Much longer than ROUTE_TTL_MS on purpose. A measured cold request after 53
+// idle minutes still cost 5.34 s because both memories had expired and the dead
+// node was reconsidered first. Held for six hours, a quiet site's first visitor
+// goes straight to the reachable node. It is deprioritised rather than skipped,
+// and still expires, so a repaired node is picked up again. The memory is
+// per-process, so a restart also reconsiders every node once.
+const FAILURE_TTL_MS = 21_600_000;
+const MAX_CANDIDATES = 3;
 
 // Node's shared agent pools keep-alive sockets by host and port only, so a
 // pooled connection would be reused no matter which address was pinned. Each

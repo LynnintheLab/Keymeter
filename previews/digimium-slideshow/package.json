@@ -1,0 +1,11 @@
+{
+  "name": "digimium-slideshow",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 5188 --bind 127.0.0.1",
+    "present": "npx --yes hyperframes@0.7.84 present ./composition --port 5189 --no-open",
+    "check": "npx --yes hyperframes@0.7.84 check ./composition",
+    "snapshot": "npx --yes hyperframes@0.7.84 snapshot ./composition --at 3,9,15,21,27 --no-end --output ./stills"
+  }
+}

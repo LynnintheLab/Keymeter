@@ -4,29 +4,29 @@ Updated: 2026-11-13
 
 ## Current status
 
-The RunningHub outage is an outbound network problem, not a credential, token or application-logic problem. Confirmed from outside Hostinger on 2026-11-13:
+Resolved. The outage was an outbound network fault, not a credential, token, database or application-logic problem.
 
-- The live server still cannot reach the provider. An anonymous POST to `/api/allowance` with a non-real key returns HTTP 503 after 10.3 seconds, which is the ten-second provider deadline plus overhead.
-- The destination is healthy. `https://www.runninghub.ai/openapi/v2/api-key/list` answers in about 0.22 s with HTTP 200 and `HEADER_API_KEY_NOT_FOUND` from a normal network, over valid TLS.
-- `www.runninghub.ai` is fronted by Tencent EdgeOne (`www.runninghub.ai.eo.dnse0.com`). Its DNS is geo-steered: the developer network is sent to 43.174.196.235, while Hostinger's subnet 72.61.212.0/24 is sent to 43.174.197.235. Both nodes answer normally from the developer network.
-- There is no AAAA record for `www.runninghub.ai`, so IPv6 is not part of the outbound path. The earlier "DNS IPv6 Completed" row was an empty-address success that the old report displayed as success; it is now shown as `No addresses returned`.
-- Outbound HTTPS from Hostinger is not blocked in general: the same server reaches `api.resend.com` successfully for owner sign-in codes.
+RunningHub is served by Tencent EdgeOne, whose DNS answers differently depending on who asks. Measured on the Hostinger server on 2026-11-13: the address its resolver returns, 43.174.196.235, silently drops every packet (TCP 443 `ETIMEDOUT` at 6 s), while the sibling node 43.174.197.235, serving the same hostname, opens port 443 in 0.03 s and completes a verified TLSv1.3 handshake in 0.05 s. Outbound HTTPS was never blocked: the provider apex answered in 0.77 s, `api.resend.com` in 0.29 s and a network trace in 0.03 s, reporting egress 2a02:4780:6:1859:0:3a3f:5f0a:1 at CGK. There is no AAAA record for the provider, so IPv6 was never involved.
 
-That leaves two candidates, which the new layered report separates: the provider's EdgeOne edge dropping traffic from Hostinger's egress address, or Hostinger blocking outbound traffic to Tencent's range. Rotating tokens, replacing keys or redeploying cannot repair either one.
+`hostinger/provider-fetch.mjs` now routes that one origin across its reachable edge nodes, installed by `server.mjs` at startup. The hostname is never replaced, so SNI, the Host header and certificate verification are unchanged; a node that cannot present a valid certificate for `www.runninghub.ai` is refused before any credential is sent. Only connection failures move to another address, so no request already written to a socket is replayed and no job charge can be duplicated. Redirects are still not followed.
 
-The connection test now reports resolved addresses, raw TCP 443, TLS with the real hostname as SNI and full certificate verification, both HTTP transports, the same TCP/TLS checks against fixed alternate provider edge addresses, and three credential-free controls: the provider apex, the email API this server already reaches, and a network trace that reports the server's own egress address. Balance lookup, job history, the seller connection, the database, the UI and remembered owner login are unchanged.
+Verified on the live deployment: an anonymous balance request with a throwaway key went from HTTP 503 after 10.34 s to HTTP 401 in 0.80 s, meaning RunningHub received and answered it. The owner then confirmed a real customer key returns its allowance in the live checker. Balance lookup still authenticates with the customer's own key alone; no account wallet or sample balance is substituted.
+
+The Connection test deliberately measures the unassisted route, so its Balance API and Billing API rows still report the ten-second timeout while the application works. That is the signal to watch: when the `TCP 443` row for the resolved address starts connecting, RunningHub has repaired the node and this routing can be removed.
 
 ## Last thing done
 
-- Separated DNS, TCP, TLS and HTTP in the anonymous connection test and CLI, added fixed alternate-edge checks and three credential-free control destinations, and documented how to read the layered report in HOSTINGER.md.
-- Proved from outside Hostinger that the destination is healthy, that the provider is behind Tencent EdgeOne with geo-steered DNS, that Hostinger and the developer network are steered to different edge nodes, and that Hostinger's outbound HTTPS works for other destinations.
-- Passed TypeScript, focused ESLint, the Hostinger production build, all 43 application tests and all 13 Hostinger tests, including three new probe tests that assert no credential, endpoint, socket message or response body can leak into a report.
-- Pushed as 35505f4. The live site still serves the previous build: `/_next/static/chunks/DUVwCDhR.js` returns 404 until the new commit is deployed, which is a reliable public deployment check.
+- Added `hostinger/provider-fetch.mjs`, a routed transport for `https://www.runninghub.ai/` only, installed at startup by `server.mjs`. Every other destination keeps the platform fetch.
+- Gave each candidate address its own HTTPS agent. Node's shared pool keys sockets by host and port alone, so a pooled connection was being reused regardless of the pinned address, which made an early version appear to work against a blackhole address and against a host presenting the wrong certificate.
+- Fixed the custom DNS lookup to answer `options.all` with an array, which Node requires when happy-eyeballs is enabled. Without it every attempt failed `ERR_INVALID_IP_ADDRESS`.
+- Remembered a node that refuses to connect for fifteen minutes and ordered it last, longer than the ten-minute route memory. A live probe had shown 7.02 s when the route expired and the dead node was retried first.
+- Separated DNS, TCP, TLS and HTTP in the connection test and CLI, added fixed alternate-edge checks and three credential-free controls, and documented how to read the report in HOSTINGER.md.
+- Passed TypeScript, the Hostinger production build, all 43 application tests and all 25 Hostinger tests, including nine failover tests and three probe tests asserting that no key, token, socket message or response body can leak into a report. ESLint reports the same 7 pre-existing errors as before these changes.
 
 ## Next steps
 
-- Deploy commit 35505f4 on Hostinger. Automatic deployment did not run. Confirm with `/_next/static/chunks/DUVwCDhR.js` returning 200.
-- Run Connection test in /seller, then Copy report, or run `node hostinger/diagnose-runninghub.mjs` from the deployed Node directory. Read it with the table in HOSTINGER.md.
-- If the controls answer and every RunningHub row times out, the block is destination-specific. Give RunningHub the egress address from the trace row and ask them to allow it through their EdgeOne security policy. If the controls also time out, that is a Hostinger egress question instead.
-- If a fixed alternate edge address connects while the resolved one does not, pin provider requests to a reachable edge node with the real hostname as SNI and full certificate verification. Do not use a public proxy and do not send these credentials to a China-region domain.
-- Only after the route works, verify one current customer key's allowance and the seller per-job charges separately. Preserve SESSION_SECRET and BILLING_ENCRYPTION_KEY throughout.
+- Report the failing edge address 43.174.196.235 and the egress address 2a02:4780:6:1859:0:3a3f:5f0a:1 to RunningHub. Every customer routed to that node is affected, and a fix on their side is the real resolution.
+- Watch the Connection test's `TCP 443` row for 43.174.196.235. When it connects, remove the routing in `hostinger/provider-fetch.mjs` and its installation in `server.mjs`.
+- If the fixed addresses in `FALLBACK_ADDRESSES` ever stop serving the hostname, the resolver's own answers still apply; update the list from a fresh `node hostinger/diagnose-runninghub.mjs` rather than guessing.
+- Verify seller per-job charges and job history against RunningHub now that the route works, separately from balance.
+- Preserve SESSION_SECRET and BILLING_ENCRYPTION_KEY. Do not rotate tokens or keys to troubleshoot network behaviour.

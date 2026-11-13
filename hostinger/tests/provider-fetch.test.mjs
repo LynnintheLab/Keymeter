@@ -109,7 +109,7 @@ test('a node known to be unreachable is not retried first once the route expires
   clock += 700_000; // past the remembered route, still inside the failure memory
   await routed(QUOTA);
   assert.deepEqual(tried, ['198.51.100.1', FALLBACK, FALLBACK], 'the unreachable node is ordered last');
-  clock += 900_000; // the failure memory has expired, so the node is reconsidered
+  clock += 25_000_000; // the failure memory has expired, so the node is reconsidered
   await routed(QUOTA);
   assert.deepEqual(tried, ['198.51.100.1', FALLBACK, FALLBACK, '198.51.100.1', FALLBACK],
     'a node is reconsidered once its failure is old, and still falls back when it is dead');
