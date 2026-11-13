@@ -7,28 +7,22 @@
       "startTime": 0
     },
     {
-      "sceneId": "choices",
-      "notes": "Variety of choices. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "sceneId": "easy-order",
+      "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
       "startTime": 6,
       "endTime": 12
     },
     {
-      "sceneId": "easy-order",
-      "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "sceneId": "easy-payment",
+      "notes": "Payment, plan details and step-by-step usage guidance. Approval preview.",
       "startTime": 12,
       "endTime": 18
     },
     {
-      "sceneId": "easy-payment",
-      "notes": "Payment guidance. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
-      "startTime": 18,
-      "endTime": 24
-    },
-    {
       "sceneId": "fair-price",
       "notes": "Fair pricing and store link. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
-      "startTime": 24,
-      "endTime": 30
+      "startTime": 18,
+      "endTime": 24
     }
   ],
   "slideSequences": []

@@ -46,3 +46,9 @@ The Connection test deliberately measures the unassisted route, so its Balance A
 - Current status: the isolated five-slide approval preview now matches the store's white background, dark text, blue accent and Manrope/Walone typography. Product names sit beside clean native logos; the extra logo tiles and decorative framing are removed. Photoshop and Lightroom now use Adobe SVGs without baked-in white corners.
 - Last thing done: simplified all five desktop/portrait slides, refreshed the review images, and restyled the preview dialog. Added explicit slide timing so the standalone player loads its navigation correctly. Both layouts pass runtime/layout checks and 56/56 text-contrast checks each; headless Chrome verifies navigation, Close/reopen and no horizontal overflow at desktop/mobile sizes.
 - Next steps: owner reviews this revised preview. Production integration remains pending approval; the live checker and Check button are unchanged.
+
+### Four-slide copy revision (2026-11-13)
+
+- Current status: removed the former category-only slide 2. Four slides remain; the former slides 3 and 4 are now slides 2 and 3.
+- Last thing done: applied the owner's exact ordering headline and payment/plan/usage support text, aligned the Telegram illustration, renumbered the deck and adjusted its timing to 24 seconds. Refreshed desktop/portrait stills and the review overview. Both layouts pass runtime/layout checks and 45/45 text-contrast checks each; browser checks confirm all four slides, Close/reopen and no page overflow.
+- Next steps: owner reviews the updated copy in the isolated preview. Integrate into the checker only after approval.

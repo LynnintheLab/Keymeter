@@ -211,14 +211,14 @@
   <body>
     <header>
       <strong>Digimium · Ad preview</strong
-      ><span>5 slides · Approval preview</span>
+      ><span>4 slides · Approval preview</span>
     </header>
     <main class="intro">
       <h1>A short introduction to Digimium.</h1>
-      <p>Apps, choices, ordering, payment guidance and pricing.</p>
+      <p>Apps, ordering, payment and usage guidance, and pricing.</p>
       <button class="open" id="open-deck">Open slideshow</button>
       <p class="muted">The live checker is unchanged.</p>
-      <a href="review.jpg">View all five slides</a>
+      <a href="review.jpg">View all four slides</a>
     </main>
     <dialog id="review-dialog" aria-labelledby="deck-title">
       <div class="dialog-top">
@@ -236,7 +236,7 @@
       </div>
       <hyperframes-slideshow
         tabindex="0"
-        aria-label="Five-slide Digimium advertisement"
+        aria-label="Four-slide Digimium advertisement"
         ><hyperframes-player
           interactive
           src="composition/index.html"
@@ -246,33 +246,27 @@
   "slides": [
     {
       "sceneId": "root",
-      "endTime": 6,
       "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "endTime": 6,
       "startTime": 0
-    },
-    {
-      "sceneId": "choices",
-      "notes": "Variety of choices. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
-      "startTime": 6,
-      "endTime": 12
     },
     {
       "sceneId": "easy-order",
       "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
+      "startTime": 6,
+      "endTime": 12
+    },
+    {
+      "sceneId": "easy-payment",
+      "notes": "Payment, plan details and step-by-step usage guidance. Approval preview.",
       "startTime": 12,
       "endTime": 18
     },
     {
-      "sceneId": "easy-payment",
-      "notes": "Payment guidance. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
-      "startTime": 18,
-      "endTime": 24
-    },
-    {
       "sceneId": "fair-price",
       "notes": "Fair pricing and store link. Approval preview. Current availability and payment instructions are confirmed with Digimium.",
-      "startTime": 24,
-      "endTime": 30
+      "startTime": 18,
+      "endTime": 24
     }
   ],
   "slideSequences": []

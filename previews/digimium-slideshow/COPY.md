@@ -4,13 +4,14 @@ Status: **approval-only preview**. This copy does not change the live Keymeter c
 
 Destination for every store CTA: <https://buywith-digimium.store/>
 
-## Final five-slide copy
+## Current four-slide copy
 
 1. **လိုအပ်တဲ့ App တွေ တစ်နေရာတည်းမှာ ဝယ်ပါ။** — AI · Creative · Entertainment. Representative ChatGPT, Gemini, Adobe, Netflix and Spotify artwork.
-2. **ရွေးစရာ App တွေ စုံစုံလင်လင်ရှိပါတယ်။** — အလုပ်အတွက်။ ဖန်တီးဖို့။ အပန်းဖြေဖို့။ Three category rows with real product logos.
-3. **ရွေးပါ။ Order ပို့လိုက်ပါ။** — App ရွေး → Plan ရွေး → Telegram မှာ Send. A plan-selection card represents the handoff, not a completed transaction.
-4. **ငွေပေးချေဖို့လည်း Chat မှာ ကူညီပေးမယ်။** — Plan၊ ဈေးနှုန်းနဲ့ ငွေပေးချေနည်းကို အရင်အတည်ပြုနိုင်ပါတယ်။ A conceptual Telegram exchange shows payment guidance without naming a provider.
-5. **သင့်တင့်တဲ့ဈေးနှုန်းနဲ့ စိတ်ကြိုက်ရွေးဝယ်ပါ။** — ကိုယ်နဲ့ကိုက်တဲ့ Plan နဲ့ လက်ရှိဈေးနှုန်းကို အရင်မေးမြန်းနိုင်ပါတယ်။ CTA: **Digimium မှာ ရွေးကြည့်မယ်**. Fair pricing is the owner's positioning, not a comparative cheapest-price claim.
+2. **စိတ်ကြိုက်ရွေးချယ်ပြီး Order တင်ရုံပါပဲ** — App ရွေး → Plan ရွေး → Telegram မှာ Send. A plan-selection card represents the handoff, not a completed transaction.
+3. **ငွေပေးချေဖို့ / Plan အသေးစိတ်** — **အသုံးပြုပုံအဆင့်ဆင့်ကို အသေးစိတ်ကူညီပေးမည်**. A conceptual Telegram exchange lists payment, plan and step-by-step usage guidance. This wording is supplied by the owner.
+4. **သင့်တင့်တဲ့ဈေးနှုန်းနဲ့ စိတ်ကြိုက်ရွေးဝယ်ပါ။** — ကိုယ်နဲ့ကိုက်တဲ့ Plan နဲ့ လက်ရှိဈေးနှုန်းကို အရင်မေးမြန်းနိုင်ပါတယ်။ CTA: **Digimium မှာ ရွေးကြည့်မယ်**. Fair pricing is the owner's positioning, not a comparative cheapest-price claim.
+
+The former category-only slide 2 was removed at the owner's request. The former slides 3 and 4 are now slides 2 and 3.
 
 ## Verified source
 

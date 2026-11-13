@@ -20,8 +20,6 @@ html,body,.scene-frame{width:900px;height:1500px}
 .logo-cloud{height:490px;margin-top:20px;gap:30px 28px}
 .logo-cloud .app-tile{gap:20px}.logo-cloud .app-tile img{width:116px;height:116px}
 .logo-cloud .app-name{font-size:29px}
-.category-list{height:auto}.category{padding:32px 0;gap:32px}
-.category strong{font-size:42px}.category p{font-size:32px}
 .order-visual{height:540px;padding-top:0}.order-path{padding-bottom:32px;font-size:32px}
 .order-sheet{padding:30px}.sheet-label{font-size:34px}
 .send-bar{font-size:34px}.product-line{padding:32px 0}

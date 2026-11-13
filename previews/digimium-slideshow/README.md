@@ -1,6 +1,6 @@
 # Digimium ad slideshow — approval preview
 
-Five short Burmese slides for a proposed Keymeter post-check advertisement.
+Four short Burmese slides for a proposed Keymeter post-check advertisement.
 This folder is isolated: the checker does not import it and its Check button is unchanged.
 
 ## Review
@@ -21,10 +21,9 @@ clean Adobe SVG artwork instead of the older images with baked-in white corners.
 ## Content
 
 1. Apps in one place: ChatGPT, Gemini, Adobe, Netflix and Spotify.
-2. Choice across AI, creative and entertainment products.
-3. Choose product/plan, then send the prepared Telegram order.
-4. Confirm plan, price and payment instructions in Telegram.
-5. Fair-price positioning and a link to the current store options.
+2. Choose product/plan, then send the prepared Telegram order.
+3. Payment, plan details and step-by-step usage guidance.
+4. Fair-price positioning and a link to the current store options.
 
 See `COPY.md` for verified source links and claim constraints.
 No price comparison, discount, stock guarantee or named payment service is implied.
@@ -58,8 +57,8 @@ and [Lightroom](https://www.adobe.com/cc-shared/assets/img/product-icons/svg/lig
 
 ## Validation result
 
-Both desktop and portrait compositions pass runtime and layout checks at all five
-slide hold points, with 56/56 WCAG AA text-contrast checks passing in each layout.
+Both desktop and portrait compositions pass runtime and layout checks at all four
+slide hold points, with 45/45 WCAG AA text-contrast checks passing in each layout.
 Static checks report no errors and four reviewed authoring warnings for reused
 brand artwork and composition file length. Rendered desktop and portrait stills
 were visually reviewed. Headless Chrome also verifies slide navigation, Close and
