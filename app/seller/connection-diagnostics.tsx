@@ -4,9 +4,17 @@ import { useEffect, useRef, useState } from 'react';
 import styles from './connection-diagnostics.module.css';
 
 type Probe = {
-  target?: 'quota' | 'seller';
-  transport: 'dns' | 'node-fetch' | 'native-https';
+  target?: 'quota' | 'seller' | 'apex' | 'mail' | 'trace';
+  transport: 'dns' | 'node-fetch' | 'native-https' | 'tcp' | 'tls' | 'control';
   family?: 4 | 6;
+  address?: string;
+  addresses?: string[];
+  connected?: boolean;
+  authorized?: boolean;
+  protocol?: string;
+  alternate?: boolean;
+  egressAddress?: string;
+  egressColo?: string;
   status?: number;
   providerCode?: string;
   providerName?: string;
@@ -25,7 +33,13 @@ const errorCodes = new Set([
   'UND_ERR_BODY_TIMEOUT', 'UND_ERR_SOCKET', 'CERT_HAS_EXPIRED', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
   'DEPTH_ZERO_SELF_SIGNED_CERT', 'ERR_TLS_CERT_ALTNAME_INVALID', 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
   'ERR_SSL_WRONG_VERSION_NUMBER', 'BODY_TOO_LARGE', 'INVALID_JSON',
+  'EPIPE', 'EACCES', 'EADDRNOTAVAIL', 'EAFNOSUPPORT', 'EPROTO',
+  'ERR_TLS_HANDSHAKE_TIMEOUT', 'CERT_NOT_YET_VALID', 'SELF_SIGNED_CERT_IN_CHAIN',
 ]);
+const transports = new Set(['dns', 'node-fetch', 'native-https', 'tcp', 'tls', 'control']);
+const targets = new Set(['quota', 'seller', 'apex', 'mail', 'trace']);
+const addressPattern = /^[0-9a-f.:]{3,45}$/i;
+const protocolPattern = /^TLSv1(?:\.[0-3])?$/;
 const providerNames = new Set(['HEADER_API_KEY_NOT_FOUND', 'APIKEY_USER_NOT_FOUND', 'TOKEN_MISSION', 'TOKEN_INVALID']);
 
 // Copy only diagnostic labels; never include arbitrary response text or credentials.
@@ -33,16 +47,25 @@ function safeReport(value: unknown): Report {
   if (!value || typeof value !== 'object') throw new Error();
   const report = value as Record<string, unknown>;
   if (typeof report.checkedAt !== 'string' || !Number.isFinite(Date.parse(report.checkedAt))
-    || !Array.isArray(report.probes) || report.probes.length < 1 || report.probes.length > 8) throw new Error();
+    || !Array.isArray(report.probes) || report.probes.length < 1 || report.probes.length > 40) throw new Error();
   const probes: Probe[] = report.probes.map((item: unknown) => {
     if (!item || typeof item !== 'object') throw new Error();
     const probe = item as Record<string, unknown>;
-    if (!['dns', 'node-fetch', 'native-https'].includes(String(probe.transport))
+    if (!transports.has(String(probe.transport))
       || typeof probe.elapsedMs !== 'number' || !Number.isFinite(probe.elapsedMs)
       || probe.elapsedMs < 0 || probe.elapsedMs > 60_000) throw new Error();
     const result: Probe = { transport: probe.transport as Probe['transport'], elapsedMs: Math.round(probe.elapsedMs) };
-    if (probe.target === 'quota' || probe.target === 'seller') result.target = probe.target;
+    if (typeof probe.target === 'string' && targets.has(probe.target)) result.target = probe.target as Probe['target'];
     if (probe.family === 4 || probe.family === 6) result.family = probe.family;
+    if (typeof probe.address === 'string' && addressPattern.test(probe.address)) result.address = probe.address;
+    if (Array.isArray(probe.addresses)) result.addresses = probe.addresses
+      .filter((value): value is string => typeof value === 'string' && addressPattern.test(value)).slice(0, 8);
+    if (probe.connected === true) result.connected = true;
+    if (typeof probe.authorized === 'boolean') result.authorized = probe.authorized;
+    if (typeof probe.protocol === 'string' && protocolPattern.test(probe.protocol)) result.protocol = probe.protocol;
+    if (probe.alternate === true) result.alternate = true;
+    if (typeof probe.egressAddress === 'string' && addressPattern.test(probe.egressAddress)) result.egressAddress = probe.egressAddress;
+    if (typeof probe.egressColo === 'string' && /^[A-Z]{3}$/.test(probe.egressColo)) result.egressColo = probe.egressColo;
     if (typeof probe.status === 'number' && Number.isInteger(probe.status) && probe.status >= 100 && probe.status <= 599) result.status = probe.status;
     if (typeof probe.providerCode === 'string' && (/^\d{1,6}$/.test(probe.providerCode) || probe.providerCode === 'UNRECOGNIZED')) result.providerCode = probe.providerCode;
     if (typeof probe.providerName === 'string' && providerNames.has(probe.providerName)) result.providerName = probe.providerName;
@@ -56,9 +79,33 @@ function safeReport(value: unknown): Report {
 }
 
 function labels(probe: Probe) {
-  return [probe.status && `HTTP ${probe.status}`, probe.providerCode && `Code ${probe.providerCode}`,
-    probe.providerName, ...probe.codes ?? [], ...probe.names ?? [], probe.kind,
+  const resolved = probe.transport === 'dns'
+    ? (probe.addresses?.length ? probe.addresses.join(', ') : 'No addresses returned')
+    : undefined;
+  return [resolved, probe.connected && (probe.transport === 'tcp' ? 'Port 443 open' : 'Handshake completed'),
+    probe.authorized === true && 'Certificate verified', probe.authorized === false && 'Certificate not verified',
+    probe.protocol, probe.status && `HTTP ${probe.status}`, probe.providerCode && `Code ${probe.providerCode}`,
+    probe.providerName, probe.egressAddress && `Egress ${probe.egressAddress}`, probe.egressColo,
+    ...probe.codes ?? [], ...probe.names ?? [], probe.kind,
     probe.redirected && 'Redirect received'].filter(Boolean).join(' · ') || 'Completed';
+}
+
+function rowTitle(probe: Probe) {
+  if (probe.transport === 'dns') return `DNS · IPv${probe.family ?? '?'}`;
+  if (probe.transport === 'tcp') return `TCP 443${probe.alternate ? ' · alternate node' : ''}`;
+  if (probe.transport === 'tls') return `TLS${probe.alternate ? ' · alternate node' : ''}`;
+  if (probe.transport === 'control')
+    return probe.target === 'apex' ? 'Control · runninghub.ai'
+      : probe.target === 'mail' ? 'Control · email API' : 'Control · network trace';
+  return probe.target === 'quota' ? 'Balance API' : 'Billing API';
+}
+
+function rowDetail(probe: Probe) {
+  if (probe.transport === 'node-fetch') return 'Node fetch';
+  if (probe.transport === 'native-https') return 'Native HTTPS';
+  if (probe.transport === 'dns') return 'Domain lookup';
+  if (probe.transport === 'control') return 'Reachability control';
+  return probe.address ?? '';
 }
 
 export default function ConnectionDiagnostics() {
@@ -82,7 +129,7 @@ export default function ConnectionDiagnostics() {
       const response = await fetch('/api/seller/diagnostics', {
         method: 'POST', credentials: 'same-origin', mode: 'same-origin', redirect: 'error',
         cache: 'no-store', headers: { Accept: 'application/json' },
-        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]),
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]),
       });
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) setError('Sign in again to test the connection.');
@@ -112,15 +159,15 @@ export default function ConnectionDiagnostics() {
   return (
     <section className={`setupPanel ${styles.panel}`} aria-labelledby="diagnostics-title" aria-busy={busy}>
       <div className={styles.heading}>
-        <div><h2 id="diagnostics-title">Connection test</h2><p>Check this server’s route to RunningHub. No API keys or RunningHub tokens are sent.</p></div>
+        <div><h2 id="diagnostics-title">Connection test</h2><p>Check this server’s route to RunningHub layer by layer, against control destinations. No API keys or RunningHub tokens are sent.</p></div>
         <button className="secondaryButton" type="button" onClick={() => void diagnose()} disabled={busy}>{busy ? 'Testing…' : 'Test connection'}</button>
       </div>
-      {busy && <p className={styles.message} role="status">Testing DNS and two connections. This can take 10 seconds.</p>}
+      {busy && <p className={styles.message} role="status">Testing DNS, TCP, TLS, both HTTP transports and control destinations. This can take 15 seconds.</p>}
       {error && <p className={styles.message} role="alert">{error}</p>}
       {report && <>
         <div className={styles.results} role="list" aria-label="Connection test results">
-          {report.probes.map((probe, index) => <div className={styles.probe} role="listitem" key={`${probe.target}-${probe.transport}-${probe.family}-${index}`}>
-            <div className={styles.target}>{probe.target === 'quota' ? 'Balance API' : probe.target === 'seller' ? 'Billing API' : `DNS · IPv${probe.family ?? '?'}`}<span>{probe.transport === 'node-fetch' ? 'Node fetch' : probe.transport === 'native-https' ? 'Native HTTPS' : 'Domain lookup'}</span></div>
+          {report.probes.map((probe, index) => <div className={styles.probe} role="listitem" key={`${probe.target}-${probe.transport}-${probe.family}-${probe.address}-${index}`}>
+            <div className={styles.target}>{rowTitle(probe)}<span>{rowDetail(probe)}</span></div>
             <code className={styles.result}>{labels(probe)}</code>
             <span className={styles.elapsed}>{(probe.elapsedMs / 1000).toFixed(2)} s</span>
           </div>)}

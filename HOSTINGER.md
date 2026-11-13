@@ -108,6 +108,28 @@ If the terminal starts at the project source root while the running files are un
 - `ENOTFOUND` or `EAI_AGAIN` indicates DNS resolution trouble. `UND_ERR_CONNECT_TIMEOUT`, `ETIMEDOUT`, `ENETUNREACH` or similar network labels indicate an outbound connection problem. TLS labels indicate certificate negotiation trouble. Ask Hostinger support to check outbound HTTPS access to `www.runninghub.ai:443`, including any destination-side filtering, and share the credential-free diagnostic output.
 - If both transports fail from Hostinger while the endpoint answers from another network, changing access tokens or repeatedly redeploying cannot repair that network route. Resolve the outbound issue first. If one transport answers and the other fails, share that comparison with support before changing application transport behavior.
 
+### Reading the layered report
+
+The report separates the connection into layers so the failing one is identified instead of inferred from the ten-second deadline.
+
+| Row | What it proves |
+| --- | --- |
+| `DNS · IPv4` / `DNS · IPv6` | The addresses this server actually resolved. `No addresses returned` is shown explicitly; it is not reported as success. |
+| `TCP 443` | Whether a TCP connection to that address completes. `ETIMEDOUT` here means the SYN was dropped silently; `ECONNREFUSED` means the port answered with a reset. |
+| `TLS` | Whether the handshake completes and the certificate verifies for `www.runninghub.ai`. |
+| `TCP 443 · alternate node` / `TLS · alternate node` | The same checks against fixed provider edge addresses seen from other networks. They use the real hostname as SNI and full certificate verification. |
+| `Balance API` / `Billing API` | The complete anonymous HTTP request over Node fetch and native HTTPS. |
+| `Control · runninghub.ai` | The provider's apex host, which is on different infrastructure from the `www` edge. |
+| `Control · email API` | A destination this application already reaches successfully for owner sign-in codes. |
+| `Control · network trace` | General outbound HTTPS, plus this server's egress address and edge location. Give that egress address to support. |
+
+Interpret the combination:
+
+- Controls answer but every RunningHub row times out: outbound HTTPS works and the problem is specific to that destination. This is destination-side or route-specific filtering, not a credential problem and not a general egress block.
+- Controls also time out: outbound HTTPS is blocked for this account or server. That is a Hostinger question.
+- A resolved address fails while an alternate address connects: the server is being steered to an edge node it cannot reach. Report both addresses.
+- DNS returns no addresses or unexpected addresses: resolution is the failing layer; report the resolver result rather than the HTTP timeout.
+
 Runtime logs also record a bounded `[Keymeter provider network]` entry on quota or billing transport failures, without tokens, request bodies or raw error messages. Browser-direct fallback is not a dependable workaround: RunningHub can return duplicate CORS origin headers that browsers reject. Do not route customer keys through public CORS proxies. Keep saved encryption and session secrets unchanged while diagnosing connectivity.
 
 ## Official references
