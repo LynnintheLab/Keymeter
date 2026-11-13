@@ -20,6 +20,10 @@ const FALLBACK_ADDRESSES = Object.freeze(['43.174.197.235', '43.174.196.235']);
 const CONNECT_TIMEOUT_MS = 4_000;
 const ROUTE_TTL_MS = 600_000;
 const RESOLVE_TTL_MS = 60_000;
+// Longer than ROUTE_TTL_MS on purpose: when the remembered route expires, the
+// node known to be unreachable must still be ordered last. It is deprioritised
+// rather than skipped, so a repaired node is picked up again once this expires.
+const FAILURE_TTL_MS = 900_000;
 const MAX_CANDIDATES = 4;
 
 // Node's shared agent pools keep-alive sockets by host and port only, so a
@@ -102,6 +106,7 @@ export function createProviderFetch(originalFetch, options = {}) {
   const resolver = options.resolver ?? new Resolver({ timeout: 2_000, tries: 1 });
   let route = { address: '', expires: 0 };
   let resolved = { addresses: [], expires: 0 };
+  const failures = new Map();
 
   async function resolveAddresses() {
     if (now() < resolved.expires) return resolved.addresses;
@@ -114,7 +119,11 @@ export function createProviderFetch(originalFetch, options = {}) {
 
   async function candidates() {
     const remembered = route.address && now() < route.expires ? [route.address] : [];
-    return [...new Set([...remembered, ...await resolveAddresses(), ...FALLBACK_ADDRESSES])].slice(0, MAX_CANDIDATES);
+    const ordered = [...new Set([...remembered, ...await resolveAddresses(), ...FALLBACK_ADDRESSES])];
+    // Without this, the resolver's answer is retried first every time the
+    // remembered route expires, and that request pays the full connect timeout.
+    const failing = address => (failures.get(address) ?? 0) > now();
+    return [...ordered.filter(address => !failing(address)), ...ordered.filter(failing)].slice(0, MAX_CANDIDATES);
   }
 
   return async function providerFetch(input, init = {}) {
@@ -130,11 +139,13 @@ export function createProviderFetch(originalFetch, options = {}) {
       try {
         const response = await attempt(address, url, init, signal);
         route = { address, expires: now() + ROUTE_TTL_MS };
+        failures.delete(address);
         return response;
       } catch (error) {
         failure = error;
         if (route.address === address) route = { address: '', expires: 0 };
-        if (!error?.retryable) break;
+        if (error?.retryable) failures.set(address, now() + FAILURE_TTL_MS);
+        else break;
       }
     }
     throw failure ?? Object.assign(new Error('No provider route available'), { code: 'ENETUNREACH' });

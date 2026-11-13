@@ -145,7 +145,8 @@ Both addresses serve `www.runninghub.ai`. The resolver's own answer is a node th
 
 `hostinger/provider-fetch.mjs` therefore routes that one origin across its reachable edge nodes. `server.mjs` installs it at startup, so quota lookups, seller billing and job history all benefit without any change to application logic.
 
-- Candidates are tried in order: the node that last worked, then the resolver's current answers, then known addresses for the same hostname. The working node is remembered for ten minutes, so the normal path is a single direct request.
+- Candidates are tried in order: the node that last worked, then the resolver's current answers, then known addresses for the same hostname. The working node is remembered for ten minutes and that window is refreshed on every success, so the normal path is a single direct request.
+- A node that refuses to connect is remembered as unreachable for fifteen minutes and ordered last rather than skipped. Without this, the resolver's answer would be retried first every time the remembered route expired, and that one request would pay the full connect timeout. The memory expires so a repaired node is picked up again.
 - Only `https://www.runninghub.ai/` is routed. Every other destination, including the email API, keeps the platform `fetch` untouched.
 - The hostname is never replaced, so SNI, the `Host` header and certificate verification are unchanged. A node that cannot present a valid certificate for `www.runninghub.ai` fails with `ERR_TLS_CERT_ALTNAME_INVALID` before any credential is sent. This is not a proxy, and no request is sent to a third party.
 - A new address is tried only when the connection itself failed. Once a request has been written to a connected socket it is never replayed, so no charge or state-changing call can be duplicated.

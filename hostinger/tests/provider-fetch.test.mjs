@@ -91,3 +91,26 @@ test('an unresolvable hostname still reaches the known addresses', async () => {
   assert.equal((await routed(QUOTA)).status, 200);
   assert.deepEqual(tried, [FALLBACK]);
 });
+
+test('a node known to be unreachable is not retried first once the route expires', async () => {
+  const tried = [];
+  let clock = 1_000_000;
+  const routed = createProviderFetch(async () => new Response('delegated', { status: 299 }), {
+    now: () => clock,
+    resolver: { resolve4: async () => ['198.51.100.1'] },
+    attempt: async address => {
+      tried.push(address);
+      if (address !== FALLBACK) throw refused();
+      return new Response('{}', { status: 200 });
+    },
+  });
+  await routed(QUOTA);
+  assert.deepEqual(tried, ['198.51.100.1', FALLBACK]);
+  clock += 700_000; // past the remembered route, still inside the failure memory
+  await routed(QUOTA);
+  assert.deepEqual(tried, ['198.51.100.1', FALLBACK, FALLBACK], 'the unreachable node is ordered last');
+  clock += 900_000; // the failure memory has expired, so the node is reconsidered
+  await routed(QUOTA);
+  assert.deepEqual(tried, ['198.51.100.1', FALLBACK, FALLBACK, '198.51.100.1', FALLBACK],
+    'a node is reconsidered once its failure is old, and still falls back when it is dead');
+});
