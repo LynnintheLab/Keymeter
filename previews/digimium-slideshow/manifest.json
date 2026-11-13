@@ -1,0 +1,25 @@
+{
+  "slides": [
+    {
+      "sceneId": "all-in-one",
+      "notes": "What you can buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+    },
+    {
+      "sceneId": "choices",
+      "notes": "Variety of choices. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+    },
+    {
+      "sceneId": "easy-order",
+      "notes": "Easy to buy. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+    },
+    {
+      "sceneId": "easy-payment",
+      "notes": "Payment guidance. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+    },
+    {
+      "sceneId": "fair-price",
+      "notes": "Fair pricing and store link. Approval preview. Current availability and payment instructions are confirmed with Digimium."
+    }
+  ],
+  "slideSequences": []
+}
