@@ -132,6 +132,29 @@ Interpret the combination:
 
 Runtime logs also record a bounded `[Keymeter provider network]` entry on quota or billing transport failures, without tokens, request bodies or raw error messages. Browser-direct fallback is not a dependable workaround: RunningHub can return duplicate CORS origin headers that browsers reject. Do not route customer keys through public CORS proxies. Keep saved encryption and session secrets unchanged while diagnosing connectivity.
 
+## Provider edge routing
+
+RunningHub is served by Tencent EdgeOne, which answers DNS differently depending on where the question comes from. Measured on this server on 2026-11-13:
+
+| Address | TCP 443 | TLS |
+| --- | --- | --- |
+| `43.174.196.235`, the address the resolver returned | `ETIMEDOUT` | not reached |
+| `43.174.197.235`, a sibling edge node | connected in 10 ms | verified, TLSv1.3, 39 ms |
+
+Both addresses serve `www.runninghub.ai`. The resolver's own answer is a node that silently drops this server's packets, so every request stopped at the ten-second deadline even though the provider was healthy and outbound HTTPS worked for every other destination.
+
+`hostinger/provider-fetch.mjs` therefore routes that one origin across its reachable edge nodes. `server.mjs` installs it at startup, so quota lookups, seller billing and job history all benefit without any change to application logic.
+
+- Candidates are tried in order: the node that last worked, then the resolver's current answers, then known addresses for the same hostname. The working node is remembered for ten minutes, so the normal path is a single direct request.
+- Only `https://www.runninghub.ai/` is routed. Every other destination, including the email API, keeps the platform `fetch` untouched.
+- The hostname is never replaced, so SNI, the `Host` header and certificate verification are unchanged. A node that cannot present a valid certificate for `www.runninghub.ai` fails with `ERR_TLS_CERT_ALTNAME_INVALID` before any credential is sent. This is not a proxy, and no request is sent to a third party.
+- A new address is tried only when the connection itself failed. Once a request has been written to a connected socket it is never replayed, so no charge or state-changing call can be duplicated.
+- Redirects are still not followed, so no credential can be replayed to another destination.
+
+The connection test deliberately measures the **unassisted** route, so its `Balance API` and `Billing API` rows keep reporting the resolved node's timeout while the application itself works. That is the signal to watch: when the `TCP 443` row for the resolved address starts connecting, the provider's own routing is repaired and this file's routing can be removed.
+
+Report the failing edge address and the server's egress address from the trace row to RunningHub, so they can fix the node for every customer on this route.
+
 ## Official references
 
 - [Hostinger Node deployment](https://www.hostinger.com/support/how-to-deploy-a-nodejs-website-in-hostinger/)

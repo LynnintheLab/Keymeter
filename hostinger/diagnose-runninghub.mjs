@@ -3,6 +3,7 @@ import { isIP, Socket } from 'node:net';
 import { connect as tlsConnect } from 'node:tls';
 import { request } from 'node:https';
 import { pathToFileURL } from 'node:url';
+import { directFetch } from './provider-fetch.mjs';
 
 const TIMEOUT_MS = 10_000;
 const REACH_TIMEOUT_MS = 6_000;
@@ -77,7 +78,7 @@ async function boundedText(body) {
     reader.releaseLock();
   }
 }
-export async function probeFetch(targetName, transport = fetch) {
+export async function probeFetch(targetName, transport = directFetch) {
   const target = targets[targetName];
   if (!target) throw new Error('Unknown diagnostic target.');
   const start = performance.now();
@@ -202,7 +203,7 @@ function traceFacts(text) {
 // Credential-free control destinations. They prove whether outbound HTTPS works
 // at all from this server, so a provider-only failure can be told apart from a
 // blocked egress. Only the trace control's bounded body is read.
-export async function probeControl(name, transport = fetch) {
+export async function probeControl(name, transport = directFetch) {
   const control = controls[name];
   if (!control) throw new Error('Unknown control destination.');
   const start = performance.now();

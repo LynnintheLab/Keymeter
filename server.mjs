@@ -38,6 +38,10 @@ async function main() {
   const { configProblems } = await import(hostinger('config.mjs'));
   const { migrateDatabase, closeDatabase } = await import(hostinger('database.mjs'));
   const { createGatewayHandler } = await import(hostinger('gateway.mjs'));
+  const { installProviderFetch } = await import(hostinger('provider-fetch.mjs'));
+  // Some provider edge nodes drop this host's packets. Route that one origin
+  // across its reachable nodes before any request is served.
+  installProviderFetch();
   const problems = configProblems();
   let ready = problems.length === 0;
   if (!ready) console.error(problems.join('\n'));
